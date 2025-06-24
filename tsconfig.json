@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "node16", // Alterado de "esnext" para "node16"
+    "jsx": "react-native",
+    "strict": true,
+    "moduleResolution": "node16",
+    "customConditions": [],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "extends": "expo/tsconfig.base"
+}
