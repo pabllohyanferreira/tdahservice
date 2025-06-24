@@ -17,7 +17,7 @@ export default function TaskButton({ title, onPress }: TaskButtonProps) {
 const styles = StyleSheet.create({
   button: {
     backgroundColor: '#4CAF50',
-    paddingVertical: 15,
+    paddingVertical: 11,
     paddingHorizontal: 24,
     borderRadius: 10,
     marginTop: 10,
