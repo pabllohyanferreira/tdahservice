@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { AVPlaybackStatus, ResizeMode, Video } from 'expo-av';
 import { hideAsync } from 'expo-splash-screen'; 
-import { AV } from 'expo-av/build/AV';
 
 export function Splash() {
 
