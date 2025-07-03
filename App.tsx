@@ -13,7 +13,7 @@ export default function App() {
   React.useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 6100);
     return () => clearTimeout(timer);
-  }, []);
+    }, []);
 
   if (showSplash) {
     return <Splash />;
