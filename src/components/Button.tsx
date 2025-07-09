@@ -5,7 +5,7 @@ import { colors } from '../theme/colors';
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'google' | 'logout' | 'disabled';
+  variant?: 'primary' | 'google' | 'logout' | 'disabled' | 'addLembrete';
   disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
@@ -22,6 +22,7 @@ export const Button: React.FC<ButtonProps> = ({
   const getButtonStyle = () => {
     const baseStyle = [styles.button, styles[variant]];
     if (disabled) baseStyle.push(styles.disabled);
+    if (style) baseStyle.push(style);
     return baseStyle;
   };
 
@@ -40,9 +41,9 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    padding: 12,
-    borderRadius: 8,
-    width: 280,
+    padding: 16,
+    borderRadius: 16,
+    width: '100%',
     alignItems: 'center',
     marginBottom: 8,
   },
@@ -55,12 +56,15 @@ const styles = StyleSheet.create({
   logout: {
     backgroundColor: colors.action.logout,
   },
+  addLembrete: {
+    backgroundColor: colors.action.addLembrete,
+  },
   disabled: {
     backgroundColor: colors.state.disabled,
   },
   buttonText: {
-    color: colors.text.secondary,
+    color: colors.text.primary,
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 18,
   },
 }); 

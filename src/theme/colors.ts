@@ -1,33 +1,31 @@
 export const colors = {
-  // Cores de fundo
   background: {
-    primary: '#23272F',
-    secondary: '#2C2F38',
+    primary: '#181A20', // fundo mais escuro, igual ao da imagem
+    secondary: '#23272F',
+    card: '#23272F',
+    input: '#23272F',
   },
-  
-  // Cores de texto
   text: {
-    primary: '#F5F6FA',
-    secondary: '#fff',
-    placeholder: '#aaa',
+    primary: '#fff',
+    secondary: '#F5F6FA',
+    placeholder: '#A1A1AA',
+    muted: '#B0B0B0',
   },
-  
-  // Cores de ação
   action: {
-    primary: '#5e4bfe',
+    primary: '#7B3FF2', // roxo do botão
     google: '#db4437',
     logout: '#ff4757',
     success: '#4CAF50',
+    addLembrete: '#00ffff', // cor especial para adicionar lembrete
   },
-  
-  // Cores de estado
   state: {
     disabled: '#888',
     shadow: '#000000',
+    border: '#23272F',
+    delete: '#ff4757',
   },
-  
-  // Cores de input
   input: {
-    background: '#fff',
+    background: '#23272F',
+    border: '#23272F',
   },
 } as const; 
