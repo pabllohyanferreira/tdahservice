@@ -13,7 +13,6 @@ export const colors = {
   },
   action: {
     primary: '#7B3FF2', // roxo do botão
-    google: '#db4437',
     logout: '#ff4757',
     success: '#4CAF50',
     addLembrete: '#00ffff', // cor especial para adicionar lembrete

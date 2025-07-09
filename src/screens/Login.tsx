@@ -3,11 +3,12 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 import { Button } from '../components/Button';
+import { GoogleButton } from '../components/GoogleButton';
 
 export default function Login({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn, isLoading } = useAuth();
+  const { signIn, signInWithGoogle, isLoading } = useAuth();
 
   const handleLogin = useCallback(async () => {
     if (!email || !password) {
@@ -23,10 +24,14 @@ export default function Login({ navigation }: any) {
     }
   }, [email, password, signIn, navigation]);
 
-  const handleGoogleLogin = useCallback(() => {
-    // TODO: Implementar login com Google
-    Alert.alert('Em desenvolvimento', 'Login com Google será implementado em breve');
-  }, []);
+  const handleGoogleLogin = useCallback(async () => {
+    const success = await signInWithGoogle();
+    if (success) {
+      navigation.navigate('Dashboard');
+    } else {
+      Alert.alert('Erro', 'Falha no login com Google. Tente novamente.');
+    }
+  }, [signInWithGoogle, navigation]);
 
   const handleNavigateToSignUp = useCallback(() => {
     navigation.navigate('Cadastro');
@@ -63,10 +68,10 @@ export default function Login({ navigation }: any) {
         disabled={isLoading}
       />
       
-      <Button
-        title="Entrar com Google"
+      <GoogleButton
         onPress={handleGoogleLogin}
-        variant="google"
+        disabled={isLoading}
+        title={isLoading ? 'Entrando...' : 'Entrar com Google'}
       />
       
       <TouchableOpacity onPress={handleNavigateToSignUp}>

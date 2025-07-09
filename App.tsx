@@ -10,6 +10,7 @@ import Dashboard from './src/screens/Dashboard';
 import Cronograma from './src/screens/Cronograma';
 import AlarmesLembretes from './src/screens/AlarmesLembretes';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { ReminderProvider } from './src/contexts/ReminderContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -50,7 +51,7 @@ export default function App() {
   React.useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 6100);
     return () => clearTimeout(timer);
-  }, []);
+    }, []);
 
   if (showSplash) {
     return <Splash />;
@@ -58,7 +59,9 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <AppContent />
+      <ReminderProvider>
+        <AppContent />
+      </ReminderProvider>
     </AuthProvider>
   );
 }
