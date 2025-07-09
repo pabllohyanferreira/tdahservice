@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import Storage from '../utils/storage';
 
 interface User {
@@ -29,11 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadStoredUser();
-  }, []);
-
-  const loadStoredUser = async () => {
+  const loadStoredUser = useCallback(async () => {
     try {
       const storedUser = await Storage.getItem('@TDAHService:user');
       if (storedUser) {
@@ -44,13 +40,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string): Promise<boolean> => {
+  useEffect(() => {
+    loadStoredUser();
+  }, [loadStoredUser]);
+
+  const signIn = useCallback(async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       
-      // Buscar usuário cadastrado
       const users = await Storage.getItem('@TDAHService:users');
       const usersList = users || [];
       
@@ -75,22 +74,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const signUp = async (name: string, email: string, password: string): Promise<boolean> => {
+  const signUp = useCallback(async (name: string, email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       
-      // Verificar se usuário já existe
       const users = await Storage.getItem('@TDAHService:users');
       const usersList = users || [];
       
       const userExists = usersList.find((u: any) => u.email === email);
       if (userExists) {
-        return false; // Usuário já existe
+        return false;
       }
       
-      // Criar novo usuário
       const newUser = {
         id: Date.now().toString(),
         name,
@@ -101,7 +98,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       usersList.push(newUser);
       await Storage.setItem('@TDAHService:users', usersList);
       
-      // Fazer login automaticamente
       const userData = {
         id: newUser.id,
         name: newUser.name,
@@ -118,19 +114,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       await Storage.removeItem('@TDAHService:user');
       setUser(null);
     } catch (error) {
       console.error('Erro no logout:', error);
     }
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    user,
+    isLoading,
+    signIn,
+    signUp,
+    signOut,
+  }), [user, isLoading, signIn, signUp, signOut]);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

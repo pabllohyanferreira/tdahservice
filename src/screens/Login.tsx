@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { colors } from '../theme/colors';
+import { Button } from '../components/Button';
 
 export default function Login({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { signIn, isLoading } = useAuth();
 
-  const handleLogin = async () => {
+  const handleLogin = useCallback(async () => {
     if (!email || !password) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos');
       return;
@@ -19,41 +21,55 @@ export default function Login({ navigation }: any) {
     } else {
       Alert.alert('Erro', 'Email ou senha incorretos');
     }
-  };
+  }, [email, password, signIn, navigation]);
+
+  const handleGoogleLogin = useCallback(() => {
+    // TODO: Implementar login com Google
+    Alert.alert('Em desenvolvimento', 'Login com Google será implementado em breve');
+  }, []);
+
+  const handleNavigateToSignUp = useCallback(() => {
+    navigation.navigate('Cadastro');
+  }, [navigation]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
+      
       <TextInput 
         style={styles.input} 
         placeholder="Email" 
-        placeholderTextColor="#aaa"
+        placeholderTextColor={colors.text.placeholder}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        autoComplete="email"
       />
+      
       <TextInput 
         style={styles.input} 
         placeholder="Senha" 
-        placeholderTextColor="#aaa" 
+        placeholderTextColor={colors.text.placeholder}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        autoComplete="password"
       />
-      <TouchableOpacity 
-        style={[styles.button, isLoading && styles.buttonDisabled]} 
+      
+      <Button
+        title={isLoading ? 'Entrando...' : 'Entrar'}
         onPress={handleLogin}
         disabled={isLoading}
-      >
-        <Text style={styles.buttonText}>
-          {isLoading ? 'Entrando...' : 'Entrar'}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.googleButton}>
-        <Text style={styles.buttonText}>Entrar com Google</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
+      />
+      
+      <Button
+        title="Entrar com Google"
+        onPress={handleGoogleLogin}
+        variant="google"
+      />
+      
+      <TouchableOpacity onPress={handleNavigateToSignUp}>
         <Text style={styles.link}>Não tem conta? Cadastre-se</Text>
       </TouchableOpacity>
     </View>
@@ -61,12 +77,29 @@ export default function Login({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#23272F' },
-  title: { fontSize: 28, color: '#F5F6FA', fontWeight: 'bold', marginBottom: 24 },
-  input: { width: 280, height: 44, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 12, marginBottom: 12 },
-  button: { backgroundColor: '#5e4bfe', padding: 12, borderRadius: 8, width: 280, alignItems: 'center', marginBottom: 8 },
-  buttonDisabled: { backgroundColor: '#888' },
-  googleButton: { backgroundColor: '#db4437', padding: 12, borderRadius: 8, width: 280, alignItems: 'center', marginBottom: 8 },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  link: { color: '#5e4bfe', marginTop: 12, fontSize: 15 },
+  container: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: colors.background.primary 
+  },
+  title: { 
+    fontSize: 28, 
+    color: colors.text.primary, 
+    fontWeight: 'bold', 
+    marginBottom: 24 
+  },
+  input: { 
+    width: 280, 
+    height: 44, 
+    backgroundColor: colors.input.background, 
+    borderRadius: 8, 
+    paddingHorizontal: 12, 
+    marginBottom: 12 
+  },
+  link: { 
+    color: colors.action.primary, 
+    marginTop: 12, 
+    fontSize: 15 
+  },
 }); 
