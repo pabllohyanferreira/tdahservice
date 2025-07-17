@@ -265,8 +265,8 @@ export default function AlarmesLembretes({ navigation }: any) {
       {/* Modal do seletor de data/hora */}
       <DateTimePickerModal
         visible={showDateTimePicker}
-        selectedDateTime={date}
-        onDateTimeChange={setDate}
+        selectedDateTime={dateTime}
+        onDateTimeChange={setDateTime}
         onClose={() => setShowDateTimePicker(false)}
       />
     </View>
@@ -354,7 +354,6 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: colors.state.border,
   },
   textArea: {
     height: 80,
@@ -376,12 +375,10 @@ const styles = StyleSheet.create({
   },
   dateTimeButtonLabel: {
     fontSize: 14,
-    color: colors.text.muted,
     marginBottom: 4,
   },
   dateTimeButtonValue: {
     fontSize: 16,
-    color: colors.text.primary,
     fontWeight: '600',
   },
   dateTimeButtonIcon: {
@@ -396,12 +393,10 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: colors.state.disabled,
     marginRight: 8,
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: colors.text.primary,
     fontSize: 16,
     fontWeight: 'bold',
   },
