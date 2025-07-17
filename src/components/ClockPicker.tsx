@@ -144,7 +144,7 @@ export const ClockPicker: React.FC<ClockPickerProps> = ({
               keyboardType="numeric"
               maxLength={2}
               placeholder="00"
-              placeholderTextColor={colors.text.placeholder}
+              placeholderTextColor="#888"
               textAlign="center"
             />
             <Text style={styles.timeLabel}>Horas</Text>
@@ -171,7 +171,7 @@ export const ClockPicker: React.FC<ClockPickerProps> = ({
               keyboardType="numeric"
               maxLength={2}
               placeholder="00"
-              placeholderTextColor={colors.text.placeholder}
+              placeholderTextColor="#888"
               textAlign="center"
             />
             <Text style={styles.timeLabel}>Minutos</Text>
@@ -223,7 +223,7 @@ export const ClockPicker: React.FC<ClockPickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.background.card,
+    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -239,16 +239,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.text.primary,
+    color: '#23272F',
   },
   nowButton: {
-    backgroundColor: colors.action.primary,
+    backgroundColor: '#5e4bfe',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
   nowButtonText: {
-    color: colors.text.primary,
+    color: '#23272F',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: colors.text.primary,
+    color: '#23272F',
   },
   timeInputContainer: {
     flexDirection: 'row',
@@ -274,13 +274,13 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.input.background,
+    backgroundColor: '#fff',
     borderRadius: 8,
     marginVertical: 4,
   },
   arrowText: {
     fontSize: 16,
-    color: colors.action.primary,
+    color: '#5e4bfe',
     fontWeight: 'bold',
   },
   inputContainer: {
@@ -290,25 +290,25 @@ const styles = StyleSheet.create({
   timeInput: {
     width: 60,
     height: 50,
-    backgroundColor: colors.input.background,
+    backgroundColor: '#fff',
     borderRadius: 12,
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.text.primary,
+    color: '#23272F',
     textAlign: 'center',
     borderWidth: 2,
-    borderColor: colors.state.border,
+    borderColor: '#B0B0B0',
   },
   timeLabel: {
     fontSize: 12,
-    color: colors.text.secondary,
+    color: '#888',
     marginTop: 4,
     fontWeight: '600',
   },
   separator: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: colors.text.primary,
+    color: '#23272F',
     marginHorizontal: 16,
   },
   quickTimeButtons: {
@@ -318,16 +318,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quickButton: {
-    backgroundColor: colors.input.background,
+    backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.state.border,
+    borderColor: '#B0B0B0',
   },
   quickButtonText: {
     fontSize: 14,
-    color: colors.text.primary,
+    color: '#23272F',
     fontWeight: '600',
   },
 }); 

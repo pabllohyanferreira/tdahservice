@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
-import { colors } from '../theme/colors';
 import { Button } from '../components/Button';
 import { GoogleButton } from '../components/GoogleButton';
 
@@ -44,7 +43,7 @@ export default function Login({ navigation }: any) {
       <TextInput 
         style={styles.input} 
         placeholder="Email" 
-        placeholderTextColor={colors.text.placeholder}
+        placeholderTextColor="#888"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -55,7 +54,7 @@ export default function Login({ navigation }: any) {
       <TextInput 
         style={styles.input} 
         placeholder="Senha" 
-        placeholderTextColor={colors.text.placeholder}
+        placeholderTextColor="#888"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
@@ -86,24 +85,24 @@ const styles = StyleSheet.create({
     flex: 1, 
     justifyContent: 'center', 
     alignItems: 'center', 
-    backgroundColor: colors.background.primary 
+    backgroundColor: '#23272F' 
   },
   title: { 
     fontSize: 28, 
-    color: colors.text.primary, 
+    color: '#fff', 
     fontWeight: 'bold', 
     marginBottom: 24 
   },
   input: { 
     width: 280, 
     height: 44, 
-    backgroundColor: colors.input.background, 
+    backgroundColor: '#fff', 
     borderRadius: 8, 
     paddingHorizontal: 12, 
     marginBottom: 12 
   },
   link: { 
-    color: colors.action.primary, 
+    color: '#007bff', 
     marginTop: 12, 
     fontSize: 15 
   },

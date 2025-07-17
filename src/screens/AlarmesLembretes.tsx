@@ -11,27 +11,27 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { colors } from '../theme/colors';
 import { Button } from '../components/Button';
 import { ReminderCard } from '../components/ReminderCard';
 import { DateTimePickerModal } from '../components/DateTimePickerModal';
 import { useReminders } from '../contexts/ReminderContext';
-import { Reminder } from '../types/reminder';
+import { Reminder, CreateReminderData } from '../types/reminder';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 export default function AlarmesLembretes({ navigation }: any) {
-  const { reminders, createReminder, updateReminder, deleteReminder, toggleReminder } = useReminders();
+  const { reminders, addReminder, updateReminder, deleteReminder, isLoading, toggleReminder } = useReminders();
   const [showModal, setShowModal] = useState(false);
   const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date());
+  const [dateTime, setDateTime] = useState(new Date());
 
   const handleAddReminder = useCallback(() => {
     setEditingReminder(null);
     setTitle('');
     setDescription('');
-    setDate(new Date());
+    setDateTime(new Date());
     setShowModal(true);
   }, []);
 
@@ -39,7 +39,7 @@ export default function AlarmesLembretes({ navigation }: any) {
     setEditingReminder(reminder);
     setTitle(reminder.title);
     setDescription(reminder.description || '');
-    setDate(reminder.date);
+    setDateTime(reminder.dateTime);
     setShowModal(true);
   }, []);
 
@@ -51,7 +51,7 @@ export default function AlarmesLembretes({ navigation }: any) {
 
     // Verificar se a data não é no passado
     const now = new Date();
-    if (date < now) {
+    if (dateTime < now) {
       Alert.alert('Erro', 'A data e hora do lembrete não pode ser no passado');
       return;
     }
@@ -63,14 +63,15 @@ export default function AlarmesLembretes({ navigation }: any) {
         success = await updateReminder(editingReminder.id, {
           title: title.trim(),
           description: description.trim() || undefined,
-          date,
+          dateTime,
         });
       } else {
-        success = await createReminder({
+        const payload: CreateReminderData = {
           title: title.trim(),
           description: description.trim() || undefined,
-          date,
-        });
+          dateTime,
+        };
+        success = await addReminder(payload);
       }
 
       if (success) {
@@ -78,7 +79,7 @@ export default function AlarmesLembretes({ navigation }: any) {
         setEditingReminder(null);
         setTitle('');
         setDescription('');
-        setDate(new Date());
+        setDateTime(new Date());
         Alert.alert('Sucesso', editingReminder ? 'Lembrete atualizado!' : 'Lembrete criado!');
       } else {
         Alert.alert('Erro', 'Não foi possível salvar o lembrete');
@@ -86,7 +87,7 @@ export default function AlarmesLembretes({ navigation }: any) {
     } catch (error) {
       Alert.alert('Erro', 'Ocorreu um erro ao salvar o lembrete');
     }
-  }, [title, description, date, editingReminder, createReminder, updateReminder]);
+  }, [title, description, dateTime, editingReminder, addReminder, updateReminder]);
 
   const handleDeleteReminder = useCallback(async (id: string) => {
     const success = await deleteReminder(id);
@@ -118,9 +119,9 @@ export default function AlarmesLembretes({ navigation }: any) {
 
   const getRemindersByStatus = () => {
     const now = new Date();
-    const pending = reminders.filter(r => !r.isCompleted && r.date > now);
+    const pending = reminders.filter(r => !r.isCompleted && r.dateTime > now);
     const completed = reminders.filter(r => r.isCompleted);
-    const overdue = reminders.filter(r => !r.isCompleted && r.date <= now);
+    const overdue = reminders.filter(r => !r.isCompleted && r.dateTime <= now);
     
     return { pending, completed, overdue };
   };
@@ -128,9 +129,10 @@ export default function AlarmesLembretes({ navigation }: any) {
   const { pending, completed, overdue } = getRemindersByStatus();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: '#23272F' }]}>
+      {isLoading && <LoadingSpinner />}
       <View style={styles.header}>
-        <Text style={styles.title}>Lembretes</Text>
+        <Text style={[styles.title, { color: '#fff' }]}>Lembretes</Text>
         <Button
           title="Adicionar Lembrete"
           onPress={handleAddReminder}
@@ -141,15 +143,15 @@ export default function AlarmesLembretes({ navigation }: any) {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {reminders.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>Nenhum lembrete criado</Text>
-            <Text style={styles.emptySubtext}>Toque em "Adicionar Lembrete" para criar seu primeiro lembrete</Text>
+            <Text style={[styles.emptyText, { color: '#fff' }]}>Nenhum lembrete criado</Text>
+            <Text style={[styles.emptySubtext, { color: '#888' }]}>Toque em "Adicionar Lembrete" para criar seu primeiro lembrete</Text>
           </View>
         ) : (
           <>
             {/* Lembretes Pendentes */}
             {pending.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Pendentes</Text>
+                <Text style={[styles.sectionTitle, { color: '#fff' }]}>Pendentes</Text>
                 {pending.map((reminder) => (
                   <ReminderCard
                     key={reminder.id}
@@ -165,7 +167,7 @@ export default function AlarmesLembretes({ navigation }: any) {
             {/* Lembretes Atrasados */}
             {overdue.length > 0 && (
               <View style={styles.section}>
-                <Text style={[styles.sectionTitle, styles.overdueTitle]}>Atrasados</Text>
+                <Text style={[styles.sectionTitle, styles.overdueTitle, { color: '#FF6B6B' }]}>Atrasados</Text>
                 {overdue.map((reminder) => (
                   <ReminderCard
                     key={reminder.id}
@@ -181,7 +183,7 @@ export default function AlarmesLembretes({ navigation }: any) {
             {/* Lembretes Concluídos */}
             {completed.length > 0 && (
               <View style={styles.section}>
-                <Text style={[styles.sectionTitle, styles.completedTitle]}>Concluídos</Text>
+                <Text style={[styles.sectionTitle, styles.completedTitle, { color: '#57C5B6' }]}>Concluídos</Text>
                 {completed.map((reminder) => (
                   <ReminderCard
                     key={reminder.id}
@@ -208,23 +210,23 @@ export default function AlarmesLembretes({ navigation }: any) {
           style={styles.modalOverlay}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
+          <View style={[styles.modalContent, { backgroundColor: '#373B44' }]}>
+            <Text style={[styles.modalTitle, { color: '#fff' }]}>
               {editingReminder ? 'Editar Lembrete' : 'Novo Lembrete'}
             </Text>
 
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: '#4A4F59', color: '#fff', borderColor: '#5A606B' }]}
               placeholder="Título do lembrete"
-              placeholderTextColor={colors.text.placeholder}
+              placeholderTextColor="#888"
               value={title}
               onChangeText={setTitle}
             />
 
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, { backgroundColor: '#4A4F59', color: '#fff', borderColor: '#5A606B' }]}
               placeholder="Descrição (opcional)"
-              placeholderTextColor={colors.text.placeholder}
+              placeholderTextColor="#888"
               value={description}
               onChangeText={setDescription}
               multiline
@@ -233,13 +235,13 @@ export default function AlarmesLembretes({ navigation }: any) {
 
             {/* Botão para abrir seletor de data/hora */}
             <TouchableOpacity 
-              style={styles.dateTimeButton}
+              style={[styles.dateTimeButton, { backgroundColor: '#4A4F59', borderColor: '#5A606B' }]}
               onPress={() => setShowDateTimePicker(true)}
             >
               <View style={styles.dateTimeButtonContent}>
-                <Text style={styles.dateTimeButtonLabel}>Data e Hora</Text>
-                <Text style={styles.dateTimeButtonValue}>
-                  {formatDate(date)} às {formatTime(date)}
+                <Text style={[styles.dateTimeButtonLabel, { color: '#888' }]}>Data e Hora</Text>
+                <Text style={[styles.dateTimeButtonValue, { color: '#fff' }]}>
+                  {formatDate(dateTime)} às {formatTime(dateTime)}
                 </Text>
               </View>
               <Text style={styles.dateTimeButtonIcon}>📅</Text>
@@ -247,10 +249,10 @@ export default function AlarmesLembretes({ navigation }: any) {
 
             <View style={styles.modalActions}>
               <TouchableOpacity 
-                style={styles.cancelButton} 
+                style={[styles.cancelButton, { backgroundColor: '#5A606B' }]} 
                 onPress={() => setShowModal(false)}
               >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                <Text style={[styles.cancelButtonText, { color: '#fff' }]}>Cancelar</Text>
               </TouchableOpacity>
               <Button
                 title="Salvar"
@@ -276,17 +278,15 @@ export default function AlarmesLembretes({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background.primary,
+    // backgroundColor: theme.background.primary, // Removido, pois theme não está disponível aqui
   },
   header: {
     padding: 20,
     paddingTop: 60,
-    backgroundColor: colors.background.primary,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: colors.text.primary,
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -300,15 +300,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.text.primary,
     marginBottom: 12,
   },
-  overdueTitle: {
-    color: colors.action.logout,
-  },
-  completedTitle: {
-    color: colors.action.success,
-  },
+  overdueTitle: {},
+  completedTitle: {},
   emptyState: {
     flex: 1,
     justifyContent: 'center',
@@ -317,12 +312,10 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 18,
-    color: colors.text.primary,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: colors.text.muted,
     textAlign: 'center',
   },
   modalOverlay: {
@@ -332,7 +325,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: colors.background.card,
     borderRadius: 20,
     padding: 24,
     width: '90%',
@@ -342,16 +334,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.text.primary,
     marginBottom: 20,
     textAlign: 'center',
   },
   input: {
-    backgroundColor: colors.input.background,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    color: colors.text.primary,
     fontSize: 16,
     borderWidth: 1,
   },
@@ -360,7 +349,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   dateTimeButton: {
-    backgroundColor: colors.input.background,
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
@@ -368,7 +356,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: colors.state.border,
+    borderColor: '#5A606B',
   },
   dateTimeButtonContent: {
     flex: 1,

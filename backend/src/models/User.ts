@@ -11,8 +11,11 @@ export interface IUser extends Document {
     notifications: boolean;
     theme: 'light' | 'dark';
   };
+  role: 'user' | 'admin' | 'manager';
   createdAt: Date;
   updatedAt: Date;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -25,7 +28,10 @@ const UserSchema = new Schema<IUser>({
   preferences: {
     notifications: { type: Boolean, default: true },
     theme: { type: String, enum: ['light', 'dark'], default: 'dark' }
-  }
+  },
+  role: { type: String, enum: ['user', 'admin', 'manager'], default: 'user' },
+  passwordResetToken: { type: String },
+  passwordResetExpires: { type: Date }
 }, {
   timestamps: true
 });

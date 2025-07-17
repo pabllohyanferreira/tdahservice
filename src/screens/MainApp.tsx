@@ -4,7 +4,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack' 
 
 type RootStackParamList = {
   MainApp: undefined;
-  UsoPessoal: undefined;
 };
 
 type Props = {
@@ -15,13 +14,14 @@ export default function MainApp({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Selecione uma Categoria</Text>
-
+      {/*
       <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate('UsoPessoal')}
       >
         <Text style={styles.buttonText}>Uso Pessoal</Text>
       </TouchableOpacity>
+      */}
     </View>
   );
 }

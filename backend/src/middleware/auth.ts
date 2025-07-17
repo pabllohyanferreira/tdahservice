@@ -20,3 +20,12 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction) 
     res.status(401).json({ message: 'Token inválido' });
   }
 }; 
+
+export const authorizeRoles = (...roles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Acesso negado: permissão insuficiente.' });
+    }
+    next();
+  };
+}; 

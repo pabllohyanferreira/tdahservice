@@ -107,7 +107,7 @@ export const SimpleDateTimePicker: React.FC<SimpleDateTimePickerProps> = ({
                 value={day}
                 onChangeText={handleDayChange}
                 placeholder="DD"
-                placeholderTextColor={colors.text.placeholder}
+                placeholderTextColor="#888"
                 keyboardType="numeric"
                 maxLength={2}
               />
@@ -120,7 +120,7 @@ export const SimpleDateTimePicker: React.FC<SimpleDateTimePickerProps> = ({
                 value={month}
                 onChangeText={handleMonthChange}
                 placeholder="MM"
-                placeholderTextColor={colors.text.placeholder}
+                placeholderTextColor="#888"
                 keyboardType="numeric"
                 maxLength={2}
               />
@@ -133,7 +133,7 @@ export const SimpleDateTimePicker: React.FC<SimpleDateTimePickerProps> = ({
                 value={year}
                 onChangeText={handleYearChange}
                 placeholder="AAAA"
-                placeholderTextColor={colors.text.placeholder}
+                placeholderTextColor="#888"
                 keyboardType="numeric"
                 maxLength={4}
               />
@@ -151,7 +151,7 @@ export const SimpleDateTimePicker: React.FC<SimpleDateTimePickerProps> = ({
                 value={hour}
                 onChangeText={handleHourChange}
                 placeholder="HH"
-                placeholderTextColor={colors.text.placeholder}
+                placeholderTextColor="#888"
                 keyboardType="numeric"
                 maxLength={2}
               />
@@ -164,7 +164,7 @@ export const SimpleDateTimePicker: React.FC<SimpleDateTimePickerProps> = ({
                 value={minute}
                 onChangeText={handleMinuteChange}
                 placeholder="MM"
-                placeholderTextColor={colors.text.placeholder}
+                placeholderTextColor="#888"
                 keyboardType="numeric"
                 maxLength={2}
               />
@@ -190,16 +190,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.text.primary,
+    color: '#23272F',
   },
   nowButton: {
-    backgroundColor: colors.action.primary,
+    backgroundColor: '#5e4bfe',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
   nowButtonText: {
-    color: colors.text.primary,
+    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 14,
-    color: colors.text.muted,
+    color: '#B0B0B0',
     marginBottom: 8,
   },
   inputRow: {
@@ -230,18 +230,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   input: {
-    backgroundColor: colors.input.background,
+    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 12,
-    color: colors.text.primary,
+    color: '#23272F',
     fontSize: 16,
     textAlign: 'center',
     borderWidth: 1,
-    borderColor: colors.state.border,
+    borderColor: '#B0B0B0',
     flex: 1,
   },
   separator: {
-    color: colors.text.muted,
+    color: '#B0B0B0',
     fontSize: 18,
     fontWeight: 'bold',
     marginHorizontal: 4,

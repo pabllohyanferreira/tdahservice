@@ -1,6 +1,5 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { colors } from '../theme/colors';
 
 interface ButtonProps {
   title: string;
@@ -20,9 +19,12 @@ export const Button: React.FC<ButtonProps> = ({
   textStyle,
 }) => {
   const getButtonStyle = () => {
-    const baseStyle = [styles.button, styles[variant]];
-    if (disabled) baseStyle.push(styles.disabled);
-    if (style) baseStyle.push(style as any);
+    const baseStyle: any[] = [styles.button];
+    if (variant === 'primary') baseStyle.push({ backgroundColor: '#5e4bfe' });
+    if (variant === 'logout') baseStyle.push({ backgroundColor: '#ff6b6b' });
+    if (variant === 'addLembrete') baseStyle.push({ backgroundColor: '#4caf50' });
+    if (disabled) baseStyle.push({ backgroundColor: '#e0e0e0' });
+    if (style) baseStyle.push(style);
     return baseStyle;
   };
 
@@ -32,7 +34,7 @@ export const Button: React.FC<ButtonProps> = ({
       onPress={onPress}
       disabled={disabled}
     >
-      <Text style={[styles.buttonText, textStyle]}>
+      <Text style={[styles.buttonText, { color: '#fff' }, textStyle]}>
         {title}
       </Text>
     </TouchableOpacity>
@@ -47,21 +49,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  primary: {
-    backgroundColor: colors.action.primary,
-  },
-
-  logout: {
-    backgroundColor: colors.action.logout,
-  },
-  addLembrete: {
-    backgroundColor: colors.action.addLembrete,
-  },
-  disabled: {
-    backgroundColor: colors.state.disabled,
-  },
   buttonText: {
-    color: colors.text.primary,
     fontWeight: 'bold',
     fontSize: 18,
   },

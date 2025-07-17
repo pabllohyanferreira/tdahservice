@@ -25,7 +25,7 @@ function AppContent() {
     <NavigationContainer>
       <Stack.Navigator>
         {user ? (
-          // Usuário logado - mostrar telas principais
+        
           <>
             <Stack.Screen name="Dashboard" component={Dashboard} options={{ title: 'Dashboard' }} />
             <Stack.Screen name="Cronograma" component={Cronograma} options={{ title: 'Cronograma' }} />
@@ -34,7 +34,7 @@ function AppContent() {
             <Stack.Screen name="UsoPessoal" component={UsoPessoal} options={{ title: 'Uso Pessoal' }} />
           </>
         ) : (
-          // Usuário não logado - mostrar telas de autenticação
+          
           <>
             <Stack.Screen name="Login" component={Login} options={{ title: 'Login' }} />
             <Stack.Screen name="Cadastro" component={Cadastro} options={{ title: 'Cadastro' }} />

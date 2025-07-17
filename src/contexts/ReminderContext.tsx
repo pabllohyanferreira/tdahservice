@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 // @ts-ignore
 import Storage from '../utils/storage';
-import { Reminder } from '../types/reminder';
+import { Reminder, CreateReminderData } from '../types/reminder';
 
 // Configuração da API
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -9,10 +9,11 @@ const API_BASE_URL = 'http://localhost:3000/api';
 interface ReminderContextData {
   reminders: Reminder[];
   isLoading: boolean;
-  addReminder: (reminder: Omit<Reminder, 'id'>) => Promise<boolean>;
+  addReminder: (reminder: CreateReminderData) => Promise<boolean>;
   updateReminder: (id: string, updates: Partial<Reminder>) => Promise<boolean>;
   deleteReminder: (id: string) => Promise<boolean>;
   loadReminders: () => Promise<void>;
+  toggleReminder: (id: string) => Promise<boolean>;
 }
 
 const ReminderContext = createContext<ReminderContextData>({} as ReminderContextData);
@@ -83,7 +84,7 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     loadReminders();
   }, [loadReminders]);
 
-  const addReminder = useCallback(async (reminderData: Omit<Reminder, 'id'>): Promise<boolean> => {
+  const addReminder = useCallback(async (reminderData: CreateReminderData): Promise<boolean> => {
     try {
       setIsLoading(true);
       const token = await getAuthToken();
@@ -209,6 +210,19 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [reminders]);
 
+  const toggleReminder = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      const reminder = reminders.find(r => r.id === id);
+      if (!reminder) return false;
+      const updates = { isCompleted: !reminder.isCompleted };
+      const success = await updateReminder(id, updates);
+      return success;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [reminders, updateReminder]);
+
   return (
     <ReminderContext.Provider value={{
       reminders,
@@ -217,6 +231,7 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       updateReminder,
       deleteReminder,
       loadReminders,
+      toggleReminder,
     }}>
       {children}
     </ReminderContext.Provider>

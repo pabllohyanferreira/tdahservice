@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { colors } from '../theme/colors';
 import { Reminder } from '../types/reminder';
 
 interface ReminderCardProps {
@@ -60,13 +59,13 @@ export const ReminderCard: React.FC<ReminderCardProps> = ({
   };
 
   const isOverdue = () => {
-    return !reminder.isCompleted && new Date(reminder.date) <= new Date();
+    return !reminder.isCompleted && new Date(reminder.dateTime) <= new Date();
   };
 
   const getStatusColor = () => {
-    if (reminder.isCompleted) return colors.action.success;
-    if (isOverdue()) return colors.action.logout;
-    return colors.text.muted;
+    if (reminder.isCompleted) return '#4CAF50'; // Green for completed
+    if (isOverdue()) return '#F44336'; // Red for overdue
+    return '#9E9E9E'; // Gray for pending
   };
 
   const getStatusText = () => {
@@ -76,35 +75,40 @@ export const ReminderCard: React.FC<ReminderCardProps> = ({
   };
 
   return (
-    <View style={[styles.container, reminder.isCompleted && styles.completed, isOverdue() && styles.overdue]}>
+    <View style={[
+      styles.container,
+      { backgroundColor: '#23272F', borderColor: '#373B44' },
+      reminder.isCompleted && { backgroundColor: '#1A1D23' },
+      isOverdue() && { borderColor: '#F44336', backgroundColor: '#2d1a1a' },
+      styles.shadow
+    ]}>
       <TouchableOpacity 
         style={styles.content} 
         onPress={() => onToggle(reminder.id)}
+        activeOpacity={0.8}
       >
-        <View style={styles.checkbox}>
-          {reminder.isCompleted && <Text style={styles.checkmark}>✓</Text>}
+        <View style={[styles.checkbox, { borderColor: '#4CAF50', backgroundColor: '#23272F' }] }>
+          {reminder.isCompleted && <Text style={[styles.checkmark, { color: '#4CAF50' }]}>✓</Text>}
         </View>
-        
         <View style={styles.textContainer}>
-          <Text style={[styles.title, reminder.isCompleted && styles.completedText]}>
+          <Text style={[styles.title, { color: '#fff' }, reminder.isCompleted && styles.completedText]}>
             {reminder.title}
           </Text>
           {reminder.description && (
-            <Text style={[styles.description, reminder.isCompleted && styles.completedText]}>
+            <Text style={[styles.description, { color: '#B0B0B0' }, reminder.isCompleted && styles.completedText]}>
               {reminder.description}
             </Text>
           )}
           <View style={styles.dateContainer}>
             <Text style={[styles.date, { color: getStatusColor() }]}>
-              {formatDate(reminder.date)}
+              {formatDate(reminder.dateTime)}
             </Text>
-            <Text style={[styles.status, { color: getStatusColor() }]}>
-              {getStatusText()}
-            </Text>
+            <View style={[styles.badge, { backgroundColor: getStatusColor() }]}> 
+              <Text style={styles.badgeText}>{getStatusText()}</Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
-      
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionButton} onPress={() => onEdit(reminder)}>
           <Text style={styles.actionText}>✏️</Text>
@@ -119,20 +123,24 @@ export const ReminderCard: React.FC<ReminderCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.background.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.state.border,
+  },
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
   completed: {
-    opacity: 0.6,
+    opacity: 0.7,
   },
   overdue: {
-    borderColor: colors.action.logout,
     borderWidth: 2,
   },
   content: {
@@ -145,14 +153,11 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.action.primary,
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.background.card,
   },
   checkmark: {
-    color: colors.action.primary,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -162,12 +167,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: colors.text.primary,
     marginBottom: 4,
   },
   description: {
     fontSize: 14,
-    color: colors.text.secondary,
     marginBottom: 4,
   },
   dateContainer: {
@@ -197,5 +200,19 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 16,
+  },
+  badge: {
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 8,
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
 }); 

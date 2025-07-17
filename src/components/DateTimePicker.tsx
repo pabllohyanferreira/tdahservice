@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     flex: 1,
-    backgroundColor: colors.input.background,
+    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 4,
@@ -176,13 +176,13 @@ const styles = StyleSheet.create({
     borderColor: colors.state.border,
   },
   dateButtonText: {
-    color: colors.text.primary,
+    color: '#23272F',
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
   },
   dateButtonLabel: {
-    color: colors.text.muted,
+    color: '#B0B0B0',
     fontSize: 12,
   },
   modalOverlay: {
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.background.card,
+    backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.text.primary,
+    color: '#23272F',
   },
   modalButton: {
     fontSize: 16,
@@ -216,11 +216,11 @@ const styles = StyleSheet.create({
     height: 200,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.input.background,
+    backgroundColor: '#fff',
     borderRadius: 12,
   },
   pickerPlaceholderText: {
-    color: colors.text.muted,
+    color: '#B0B0B0',
     fontSize: 16,
   },
 }); 

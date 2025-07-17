@@ -2,7 +2,7 @@ export interface Reminder {
   id: string;
   title: string;
   description?: string;
-  date: Date;
+  dateTime: Date;
   isCompleted: boolean;
   userId: string;
   createdAt: Date;
@@ -12,12 +12,12 @@ export interface Reminder {
 export interface CreateReminderData {
   title: string;
   description?: string;
-  date: Date;
+  dateTime: Date;
 }
 
 export interface UpdateReminderData {
   title?: string;
   description?: string;
-  date?: Date;
+  dateTime?: Date;
   isCompleted?: boolean;
 } 

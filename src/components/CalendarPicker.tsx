@@ -148,7 +148,7 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.background.card,
+    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -163,13 +163,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.input.background,
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
   },
   navButtonText: {
     fontSize: 20,
-    color: colors.text.primary,
+    color: '#23272F',
     fontWeight: 'bold',
   },
   monthContainer: {
@@ -181,17 +181,17 @@ const styles = StyleSheet.create({
   monthText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.text.primary,
+    color: '#23272F',
     marginRight: 12,
   },
   todayButton: {
-    backgroundColor: colors.action.primary,
+    backgroundColor: '#5e4bfe',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
   todayButtonText: {
-    color: colors.text.primary,
+    color: '#fff',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   weekDayText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.text.muted,
+    color: '#B0B0B0',
   },
   calendarGrid: {
     flexDirection: 'row',
@@ -222,29 +222,29 @@ const styles = StyleSheet.create({
   },
   dayText: {
     fontSize: 16,
-    color: colors.text.primary,
+    color: '#23272F',
     fontWeight: '500',
   },
   todayCell: {
-    backgroundColor: colors.action.primary,
+    backgroundColor: '#5e4bfe',
     borderRadius: 20,
   },
   todayText: {
-    color: colors.text.primary,
+    color: '#fff',
     fontWeight: 'bold',
   },
   selectedCell: {
-    backgroundColor: colors.action.addLembrete,
+    backgroundColor: '#4caf50',
     borderRadius: 20,
   },
   selectedText: {
-    color: colors.text.primary,
+    color: '#23272F',
     fontWeight: 'bold',
   },
   pastDayCell: {
     opacity: 0.3,
   },
   pastDayText: {
-    color: colors.text.muted,
+    color: '#B0B0B0',
   },
 }); 

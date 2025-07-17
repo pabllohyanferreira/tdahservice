@@ -3,9 +3,12 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import { Request, Response, NextFunction } from 'express';
 
 import authRoutes from './routes/auth';
 import reminderRoutes from './routes/reminders';
+import adminRoutes from './routes/admin';
+import logger from './utils/logger';
 
 dotenv.config();
 
@@ -16,9 +19,31 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
+// Middleware de log de requisições HTTP
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.info('HTTP %s %s %d %dms - IP: %s', req.method, req.originalUrl, res.statusCode, duration, req.ip);
+  });
+  next();
+});
+
+// Middleware de tratamento de erros padronizado
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  logger.error(err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  const status = err.status || 500;
+  const message = err.message || 'Erro interno do servidor';
+  res.status(status).json({ error: message });
+});
+
 // Rotas
 app.use('/api/auth', authRoutes);
 app.use('/api/reminders', reminderRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Rota de health check
 app.get('/api/health', (req, res) => {
@@ -34,14 +59,17 @@ app.get('/', (req, res) => {
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/tdahservice';
 
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ Conectado ao MongoDB'))
+  .then(() => logger.info('✅ Conectado ao MongoDB'))
   .catch(err => {
-    console.error('❌ Erro ao conectar ao MongoDB:', err.message);
+    logger.error('❌ Erro ao conectar ao MongoDB: %s', err.message);
     process.exit(1);
   });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📱 API disponível em: http://localhost:${PORT}`);
-}); 
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    logger.info(`🚀 Servidor rodando na porta ${PORT}`);
+    logger.info(`📱 API disponível em: http://localhost:${PORT}`);
+  });
+}
+export default app; 
