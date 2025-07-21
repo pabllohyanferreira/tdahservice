@@ -2,7 +2,7 @@
 export const API_CONFIG = {
   // URL base da API
   BASE_URL: 'http://192.168.1.84:3000/api',
-  
+
   // Endpoints de autenticação
   AUTH: {
     REGISTER: '/auth/register',

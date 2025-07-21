@@ -16,18 +16,14 @@ export default function Login({ navigation }: any) {
     }
 
     const success = await signIn(email, password);
-    if (success) {
-      navigation.navigate('Dashboard');
-    } else {
+    if (!success) {
       Alert.alert('Erro', 'Email ou senha incorretos');
     }
   }, [email, password, signIn, navigation]);
 
   const handleGoogleLogin = useCallback(async () => {
     const success = await signInWithGoogle();
-    if (success) {
-      navigation.navigate('Dashboard');
-    } else {
+    if (!success) {
       Alert.alert('Erro', 'Falha no login com Google. Tente novamente.');
     }
   }, [signInWithGoogle, navigation]);

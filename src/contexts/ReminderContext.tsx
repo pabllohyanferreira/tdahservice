@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-// @ts-ignore
 import Storage from '../utils/storage';
 import { Reminder, CreateReminderData } from '../types/reminder';
+import { API_CONFIG } from '../config/api';
 
-// Configuração da API
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = API_CONFIG.BASE_URL;
 
 interface ReminderContextData {
   reminders: Reminder[];
@@ -12,7 +11,6 @@ interface ReminderContextData {
   addReminder: (reminder: CreateReminderData) => Promise<boolean>;
   updateReminder: (id: string, updates: Partial<Reminder>) => Promise<boolean>;
   deleteReminder: (id: string) => Promise<boolean>;
-  loadReminders: () => Promise<void>;
   toggleReminder: (id: string) => Promise<boolean>;
 }
 
@@ -30,77 +28,76 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const getAuthToken = async () => {
-    return await Storage.getItem('@TDAHService:token');
-  };
-
-  const loadReminders = useCallback(async () => {
-    try {
+  // Carrega lembretes do backend ou local
+  useEffect(() => {
+    const fetchReminders = async () => {
       setIsLoading(true);
-      const token = await getAuthToken();
-      
-      if (!token) {
-        console.log('Token não encontrado, carregando lembretes locais');
-        const storedReminders = await Storage.getItem('@TDAHService:reminders');
-        if (storedReminders) {
-          setReminders(storedReminders);
+      try {
+        const token = await Storage.getItem('@TDAHService:token');
+        if (!token) {
+          const storedReminders = await Storage.getItem('@TDAHService:reminders');
+          setReminders(Array.isArray(storedReminders) ? storedReminders : []);
+          return;
         }
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/reminders`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+        const response = await fetch(`${API_BASE_URL}/reminders`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const remindersArray = Array.isArray(data)
+            ? data
+            : (Array.isArray(data.reminders) ? data.reminders : []);
+          const mappedReminders = remindersArray.map((reminder: any) => {
+            let dateTime;
+            if (!reminder.dateTime || isNaN(new Date(reminder.dateTime).getTime())) {
+              dateTime = new Date();
+            } else {
+              dateTime = reminder.dateTime instanceof Date
+                ? reminder.dateTime
+                : new Date(reminder.dateTime);
+            }
+            return {
+              id: reminder._id || reminder.id || Math.random().toString(36).substr(2, 9),
+              title: reminder.title,
+              description: reminder.description || '',
+              dateTime,
+              isCompleted: reminder.status === 'completed' || reminder.isCompleted || false,
+              userId: reminder.userId,
+              createdAt: reminder.createdAt ? new Date(reminder.createdAt) : new Date(),
+              updatedAt: reminder.updatedAt ? new Date(reminder.updatedAt) : new Date(),
+            };
+          });
+          setReminders(mappedReminders);
+          await Storage.setItem('@TDAHService:reminders', mappedReminders);
+        } else {
+          setReminders([]);
         }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setReminders(data);
-        // Salvar localmente como backup
-        await Storage.setItem('@TDAHService:reminders', data);
-      } else {
-        console.error('Erro ao carregar lembretes do servidor');
-        // Fallback para dados locais
-        const storedReminders = await Storage.getItem('@TDAHService:reminders');
-        if (storedReminders) {
-          setReminders(storedReminders);
-        }
+      } catch (error) {
+        setReminders([]);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Erro ao carregar lembretes:', error);
-      // Fallback para dados locais
-      const storedReminders = await Storage.getItem('@TDAHService:reminders');
-      if (storedReminders) {
-        setReminders(storedReminders);
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    };
+    fetchReminders();
   }, []);
 
-  useEffect(() => {
-    loadReminders();
-  }, [loadReminders]);
-
+  // Adiciona lembrete
   const addReminder = useCallback(async (reminderData: CreateReminderData): Promise<boolean> => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const token = await getAuthToken();
-      
+      const token = await Storage.getItem('@TDAHService:token');
       if (!token) {
-        // Fallback para armazenamento local
         const newReminder: Reminder = {
           ...reminderData,
           id: Date.now().toString(),
         };
-        const updatedReminders = [...reminders, newReminder];
-        setReminders(updatedReminders);
-        await Storage.setItem('@TDAHService:reminders', updatedReminders);
+        setReminders(prev => [...prev, newReminder]);
+        await Storage.setItem('@TDAHService:reminders', reminders => [...(reminders || []), newReminder]);
         return true;
       }
-
       const response = await fetch(`${API_BASE_URL}/reminders`, {
         method: 'POST',
         headers: {
@@ -109,40 +106,34 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         },
         body: JSON.stringify(reminderData)
       });
-
       if (response.ok) {
         const newReminder = await response.json();
-        const updatedReminders = [...reminders, newReminder];
-        setReminders(updatedReminders);
-        await Storage.setItem('@TDAHService:reminders', updatedReminders);
+        setReminders(prev => [...prev, newReminder]);
+        await Storage.setItem('@TDAHService:reminders', reminders => [...(reminders || []), newReminder]);
         return true;
-      } else {
-        console.error('Erro ao criar lembrete no servidor');
-        return false;
       }
-    } catch (error) {
-      console.error('Erro ao adicionar lembrete:', error);
+      return false;
+    } catch {
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [reminders]);
+  }, []);
 
+  // Atualiza lembrete
   const updateReminder = useCallback(async (id: string, updates: Partial<Reminder>): Promise<boolean> => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const token = await getAuthToken();
-      
+      const token = await Storage.getItem('@TDAHService:token');
       if (!token) {
-        // Fallback para armazenamento local
-        const updatedReminders = reminders.map(reminder =>
+        setReminders(prev => prev.map(reminder =>
           reminder.id === id ? { ...reminder, ...updates } : reminder
-        );
-        setReminders(updatedReminders);
-        await Storage.setItem('@TDAHService:reminders', updatedReminders);
+        ));
+        await Storage.setItem('@TDAHService:reminders', reminders => reminders.map((reminder: Reminder) =>
+          reminder.id === id ? { ...reminder, ...updates } : reminder
+        ));
         return true;
       }
-
       const response = await fetch(`${API_BASE_URL}/reminders/${id}`, {
         method: 'PUT',
         headers: {
@@ -151,40 +142,34 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         },
         body: JSON.stringify(updates)
       });
-
       if (response.ok) {
         const updatedReminder = await response.json();
-        const updatedReminders = reminders.map(reminder =>
+        setReminders(prev => prev.map(reminder =>
           reminder.id === id ? updatedReminder : reminder
-        );
-        setReminders(updatedReminders);
-        await Storage.setItem('@TDAHService:reminders', updatedReminders);
+        ));
+        await Storage.setItem('@TDAHService:reminders', reminders => reminders.map((reminder: Reminder) =>
+          reminder.id === id ? updatedReminder : reminder
+        ));
         return true;
-      } else {
-        console.error('Erro ao atualizar lembrete no servidor');
-        return false;
       }
-    } catch (error) {
-      console.error('Erro ao atualizar lembrete:', error);
+      return false;
+    } catch {
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [reminders]);
+  }, []);
 
+  // Deleta lembrete
   const deleteReminder = useCallback(async (id: string): Promise<boolean> => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const token = await getAuthToken();
-      
+      const token = await Storage.getItem('@TDAHService:token');
       if (!token) {
-        // Fallback para armazenamento local
-        const updatedReminders = reminders.filter(reminder => reminder.id !== id);
-        setReminders(updatedReminders);
-        await Storage.setItem('@TDAHService:reminders', updatedReminders);
+        setReminders(prev => prev.filter(reminder => reminder.id !== id));
+        await Storage.setItem('@TDAHService:reminders', reminders => reminders.filter((reminder: Reminder) => reminder.id !== id));
         return true;
       }
-
       const response = await fetch(`${API_BASE_URL}/reminders/${id}`, {
         method: 'DELETE',
         headers: {
@@ -192,36 +177,77 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           'Content-Type': 'application/json'
         }
       });
-
       if (response.ok) {
-        const updatedReminders = reminders.filter(reminder => reminder.id !== id);
-        setReminders(updatedReminders);
-        await Storage.setItem('@TDAHService:reminders', updatedReminders);
+        setReminders(prev => prev.filter(reminder => reminder.id !== id));
+        await Storage.setItem('@TDAHService:reminders', reminders => reminders.filter((reminder: Reminder) => reminder.id !== id));
         return true;
-      } else {
-        console.error('Erro ao deletar lembrete no servidor');
-        return false;
       }
-    } catch (error) {
-      console.error('Erro ao deletar lembrete:', error);
+      return false;
+    } catch {
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [reminders]);
+  }, []);
 
+  // Alterna lembrete concluído
   const toggleReminder = useCallback(async (id: string): Promise<boolean> => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const reminder = reminders.find(r => r.id === id);
-      if (!reminder) return false;
-      const updates = { isCompleted: !reminder.isCompleted };
-      const success = await updateReminder(id, updates);
-      return success;
+      const token = await Storage.getItem('@TDAHService:token');
+      if (!token) {
+        setReminders(prev =>
+          prev.map(reminder =>
+            reminder.id === id
+              ? { ...reminder, isCompleted: !reminder.isCompleted }
+              : reminder
+          )
+        );
+        await Storage.setItem('@TDAHService:reminders', reminders =>
+          reminders.map((reminder: Reminder) =>
+            reminder.id === id
+              ? { ...reminder, isCompleted: !reminder.isCompleted }
+              : reminder
+          )
+        );
+        return true;
+      }
+      // Busca o lembrete atual
+      let found: Reminder | undefined;
+      setReminders(prev => {
+        found = prev.find(r => r.id === id);
+        return prev;
+      });
+      if (!found) return false;
+      const response = await fetch(`${API_BASE_URL}/reminders/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ isCompleted: !found.isCompleted })
+      });
+      if (response.ok) {
+        const updatedReminder = await response.json();
+        setReminders(prev =>
+          prev.map(reminder =>
+            reminder.id === id ? updatedReminder : reminder
+          )
+        );
+        await Storage.setItem('@TDAHService:reminders', reminders =>
+          reminders.map((reminder: Reminder) =>
+            reminder.id === id ? updatedReminder : reminder
+          )
+        );
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
     } finally {
       setIsLoading(false);
     }
-  }, [reminders, updateReminder]);
+  }, []);
 
   return (
     <ReminderContext.Provider value={{
@@ -230,7 +256,6 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       addReminder,
       updateReminder,
       deleteReminder,
-      loadReminders,
       toggleReminder,
     }}>
       {children}

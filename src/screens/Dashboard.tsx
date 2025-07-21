@@ -2,9 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function Dashboard({ navigation }: any) {
   const { user, signOut } = useAuth();
+  const { theme } = useTheme();
 
   // Verificação de segurança para evitar erro caso theme esteja indefinido
   if (!user) { // Changed from theme to user
@@ -24,43 +26,36 @@ export default function Dashboard({ navigation }: any) {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: '#23272F' }]}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background.primary }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: '#F5F6FA' }]}>Bem-vindo, {user?.name}!</Text>
+        <Text style={[styles.title, { color: theme.text.primary }]}>Bem-vindo, {user?.name}!</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={[styles.settingsButton, { backgroundColor: '#5e4bfe' }]} onPress={handleGoToSettings}>
+          <TouchableOpacity style={[styles.settingsButton, { backgroundColor: theme.action.primary }]} onPress={handleGoToSettings}>
             <Ionicons name="settings-sharp" size={24} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.logoutButton, { backgroundColor: '#ff4757' }]} onPress={handleLogout}>
+          <TouchableOpacity style={[styles.logoutButton, { backgroundColor: theme.action.logout }]} onPress={handleLogout}>
             <Text style={styles.logoutText}>Sair</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <View style={styles.content}>
-        <Text style={[styles.subtitle, { color: '#F5F6FA' }]}>Seu Dashboard</Text>
+        <Text style={[styles.subtitle, { color: theme.text.primary }]}>Seu Dashboard</Text>
         
         <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { backgroundColor: '#2C2F38' }]}>
-            <Text style={[styles.statNumber, { color: '#5e4bfe' }]}>0</Text>
-            <Text style={[styles.statLabel, { color: '#F5F6FA' }]}>Tarefas Concluídas</Text>
+          <View style={[styles.statCard, { backgroundColor: theme.background.card }]}>
+            <Text style={[styles.statNumber, { color: theme.action.primary }]}>0</Text>
+            <Text style={[styles.statLabel, { color: theme.text.primary }]}>Tarefas Concluídas</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: '#2C2F38' }]}>
-            <Text style={[styles.statNumber, { color: '#5e4bfe' }]}>0</Text>
-            <Text style={[styles.statLabel, { color: '#F5F6FA' }]}>Tarefas Pendentes</Text>
+          <View style={[styles.statCard, { backgroundColor: theme.background.card }]}>
+            <Text style={[styles.statNumber, { color: theme.action.primary }]}>0</Text>
+            <Text style={[styles.statLabel, { color: theme.text.primary }]}>Tarefas Pendentes</Text>
           </View>
         </View>
 
         <View style={styles.menuContainer}>
           <TouchableOpacity 
-            style={[styles.menuButton, { backgroundColor: '#5e4bfe' }]} 
-            onPress={() => navigation.navigate('Cronograma')}
-          >
-            <Text style={styles.menuButtonText}>📅 Cronograma</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.menuButton, { backgroundColor: '#5e4bfe' }]} 
+            style={[styles.menuButton, { backgroundColor: theme.action.primary }]} 
             onPress={() => navigation.navigate('AlarmesLembretes')}
           >
             <Text style={styles.menuButtonText}>⏰ Alarmes e Lembretes</Text>

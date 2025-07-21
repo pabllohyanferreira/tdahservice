@@ -16,10 +16,13 @@ import { ReminderCard } from '../components/ReminderCard';
 import { DateTimePickerModal } from '../components/DateTimePickerModal';
 import { useReminders } from '../contexts/ReminderContext';
 import { Reminder, CreateReminderData } from '../types/reminder';
+import { formatDate, formatTime } from '../utils/date';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function AlarmesLembretes({ navigation }: any) {
   const { reminders, addReminder, updateReminder, deleteReminder, isLoading, toggleReminder } = useReminders();
+  const { theme } = useTheme();
   const [showModal, setShowModal] = useState(false);
   const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
@@ -63,7 +66,7 @@ export default function AlarmesLembretes({ navigation }: any) {
         success = await updateReminder(editingReminder.id, {
           title: title.trim(),
           description: description.trim() || undefined,
-          dateTime,
+          dateTime: dateTime instanceof Date && !isNaN(dateTime.getTime()) ? dateTime : new Date(),
         });
       } else {
         const payload: CreateReminderData = {
@@ -102,21 +105,6 @@ export default function AlarmesLembretes({ navigation }: any) {
     await toggleReminder(id);
   }, [toggleReminder]);
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(date);
-  };
-
-  const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  };
-
   const getRemindersByStatus = () => {
     const now = new Date();
     const pending = reminders.filter(r => !r.isCompleted && r.dateTime > now);
@@ -129,10 +117,10 @@ export default function AlarmesLembretes({ navigation }: any) {
   const { pending, completed, overdue } = getRemindersByStatus();
 
   return (
-    <View style={[styles.container, { backgroundColor: '#23272F' }]}>
+    <View style={[styles.container, { backgroundColor: theme.background.primary }]}>
       {isLoading && <LoadingSpinner />}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: '#fff' }]}>Lembretes</Text>
+        <Text style={[styles.title, { color: theme.text.primary }]}>Lembretes</Text>
         <Button
           title="Adicionar Lembrete"
           onPress={handleAddReminder}
@@ -140,62 +128,22 @@ export default function AlarmesLembretes({ navigation }: any) {
         />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.content, { backgroundColor: theme.background.primary }]} showsVerticalScrollIndicator={false}>
         {reminders.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={[styles.emptyText, { color: '#fff' }]}>Nenhum lembrete criado</Text>
-            <Text style={[styles.emptySubtext, { color: '#888' }]}>Toque em "Adicionar Lembrete" para criar seu primeiro lembrete</Text>
+            <Text style={[styles.emptyText, { color: theme.text.primary }]}>Nenhum lembrete criado</Text>
+            <Text style={[styles.emptySubtext, { color: theme.text.muted }]}>Toque em "Adicionar Lembrete" para criar seu primeiro lembrete</Text>
           </View>
         ) : (
-          <>
-            {/* Lembretes Pendentes */}
-            {pending.length > 0 && (
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: '#fff' }]}>Pendentes</Text>
-                {pending.map((reminder) => (
-                  <ReminderCard
-                    key={reminder.id}
-                    reminder={reminder}
-                    onToggle={handleToggleReminder}
-                    onEdit={handleEditReminder}
-                    onDelete={handleDeleteReminder}
-                  />
-                ))}
-              </View>
-            )}
-
-            {/* Lembretes Atrasados */}
-            {overdue.length > 0 && (
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, styles.overdueTitle, { color: '#FF6B6B' }]}>Atrasados</Text>
-                {overdue.map((reminder) => (
-                  <ReminderCard
-                    key={reminder.id}
-                    reminder={reminder}
-                    onToggle={handleToggleReminder}
-                    onEdit={handleEditReminder}
-                    onDelete={handleDeleteReminder}
-                  />
-                ))}
-              </View>
-            )}
-
-            {/* Lembretes Concluídos */}
-            {completed.length > 0 && (
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, styles.completedTitle, { color: '#57C5B6' }]}>Concluídos</Text>
-                {completed.map((reminder) => (
-                  <ReminderCard
-                    key={reminder.id}
-                    reminder={reminder}
-                    onToggle={handleToggleReminder}
-                    onEdit={handleEditReminder}
-                    onDelete={handleDeleteReminder}
-                  />
-                ))}
-              </View>
-            )}
-          </>
+          reminders.map((reminder, index) => (
+            <ReminderCard
+              key={reminder.id || reminder._id || index}
+              reminder={reminder}
+              onToggle={handleToggleReminder}
+              onEdit={handleEditReminder}
+              onDelete={handleDeleteReminder}
+            />
+          ))
         )}
       </ScrollView>
 

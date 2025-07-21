@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function Configuracoes() {
   const { user, signOut } = useAuth();
+  const { theme, themeType, toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState(true); // Simulação
   const [vibration, setVibration] = useState(true); // Simulação
 
@@ -22,38 +24,38 @@ export default function Configuracoes() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: '#23272F' }]}>
-      <Text style={[styles.title, { color: '#F5F6FA' }]}>Configurações</Text>
+    <View style={[styles.container, { backgroundColor: theme.background.primary }]}>
+      <Text style={[styles.title, { color: theme.text.primary }]}>Configurações</Text>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: '#F5F6FA' }]}>Preferências</Text>
+        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Preferências</Text>
         <View style={styles.row}>
-          <Text style={[styles.label, { color: '#F5F6FA' }]}>Tema escuro</Text>
-          {/* Switch removido pois não há mais tema */}
+          <Text style={[styles.label, { color: theme.text.primary }]}>Tema escuro</Text>
+          <Switch value={themeType === 'dark'} onValueChange={toggleTheme} />
         </View>
         <View style={styles.row}>
-          <Text style={[styles.label, { color: '#F5F6FA' }]}>Notificações</Text>
+          <Text style={[styles.label, { color: theme.text.primary }]}>Notificações</Text>
           <Switch value={notifications} onValueChange={handleNotificationsChange} />
         </View>
         <View style={styles.row}>
-          <Text style={[styles.label, { color: '#F5F6FA' }]}>Vibração</Text>
+          <Text style={[styles.label, { color: theme.text.primary }]}>Vibração</Text>
           <Switch value={vibration} onValueChange={handleVibrationChange} />
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: '#F5F6FA' }]}>Sua Conta</Text>
-        <Text style={[styles.userInfo, { color: '#F5F6FA' }]}>Nome: {user?.name}</Text>
-        <Text style={[styles.userInfo, { color: '#F5F6FA' }]}>E-mail: {user?.email}</Text>
+        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Sua Conta</Text>
+        <Text style={[styles.userInfo, { color: theme.text.primary }]}>Nome: {user?.name}</Text>
+        <Text style={[styles.userInfo, { color: theme.text.primary }]}>E-mail: {user?.email}</Text>
       </View>
 
-      <TouchableOpacity style={[styles.logoutButton, { backgroundColor: '#ff4757' }]} onPress={handleLogout}>
+      <TouchableOpacity style={[styles.logoutButton, { backgroundColor: theme.action.logout }]} onPress={handleLogout}>
         <Text style={styles.logoutText}>Sair da Conta</Text>
       </TouchableOpacity>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: '#F5F6FA' }]}>Sobre o App</Text>
-        <Text style={[styles.aboutText, { color: '#B0B0B0' }]}>TDAH Service v1.0{"\n"}Desenvolvido por Você</Text>
+        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Sobre o App</Text>
+        <Text style={[styles.aboutText, { color: theme.text.muted }]}>TDAH Service v1.0{"\n"}Desenvolvido por Você</Text>
       </View>
     </View>
   );

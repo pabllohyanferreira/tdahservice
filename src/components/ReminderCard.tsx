@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Reminder } from '../types/reminder';
+import { formatDate, formatTime } from '../utils/date';
 
 interface ReminderCardProps {
   reminder: Reminder;
@@ -15,6 +17,8 @@ export const ReminderCard: React.FC<ReminderCardProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const navigation = useNavigation();
+
   const handleDelete = () => {
     Alert.alert(
       'Excluir Lembrete',
@@ -24,38 +28,6 @@ export const ReminderCard: React.FC<ReminderCardProps> = ({
         { text: 'Excluir', style: 'destructive', onPress: () => onDelete(reminder.id) },
       ]
     );
-  };
-
-  const formatDate = (date: Date) => {
-    const now = new Date();
-    const reminderDate = new Date(date);
-    
-    // Se for hoje, mostrar apenas a hora
-    if (reminderDate.toDateString() === now.toDateString()) {
-      return new Intl.DateTimeFormat('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(date);
-    }
-    
-    // Se for amanhã, mostrar "Amanhã" + hora
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (reminderDate.toDateString() === tomorrow.toDateString()) {
-      return `Amanhã às ${new Intl.DateTimeFormat('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(date)}`;
-    }
-    
-    // Caso contrário, mostrar data completa
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
   };
 
   const isOverdue = () => {
@@ -75,6 +47,7 @@ export const ReminderCard: React.FC<ReminderCardProps> = ({
   };
 
   return (
+    console.log('dateTime do lembrete:', reminder.dateTime),
     <View style={[
       styles.container,
       { backgroundColor: '#23272F', borderColor: '#373B44' },
@@ -84,7 +57,7 @@ export const ReminderCard: React.FC<ReminderCardProps> = ({
     ]}>
       <TouchableOpacity 
         style={styles.content} 
-        onPress={() => onToggle(reminder.id)}
+        onPress={() => navigation.navigate('DetalheLembrete', { reminder })}
         activeOpacity={0.8}
       >
         <View style={[styles.checkbox, { borderColor: '#4CAF50', backgroundColor: '#23272F' }] }>
@@ -101,7 +74,7 @@ export const ReminderCard: React.FC<ReminderCardProps> = ({
           )}
           <View style={styles.dateContainer}>
             <Text style={[styles.date, { color: getStatusColor() }]}>
-              {formatDate(reminder.dateTime)}
+              {formatDate(new Date(reminder.dateTime))}
             </Text>
             <View style={[styles.badge, { backgroundColor: getStatusColor() }]}> 
               <Text style={styles.badgeText}>{getStatusText()}</Text>

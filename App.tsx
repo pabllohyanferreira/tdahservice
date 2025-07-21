@@ -2,15 +2,16 @@ import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MainApp from './src/screens/MainApp';
-import UsoPessoal from './src/screens/UsoPessoal';
 import { Splash } from './src/screens/Splash';
 import Login from './src/screens/Login';
 import Cadastro from './src/screens/Cadastro';
 import Dashboard from './src/screens/Dashboard';
-import Cronograma from './src/screens/Cronograma';
 import AlarmesLembretes from './src/screens/AlarmesLembretes';
+import Configuracoes from './src/screens/Configuracoes';
+import DetalheLembrete from './src/screens/DetalheLembrete';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { ReminderProvider } from './src/contexts/ReminderContext';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -28,10 +29,10 @@ function AppContent() {
         
           <>
             <Stack.Screen name="Dashboard" component={Dashboard} options={{ title: 'Dashboard' }} />
-            <Stack.Screen name="Cronograma" component={Cronograma} options={{ title: 'Cronograma' }} />
             <Stack.Screen name="AlarmesLembretes" component={AlarmesLembretes} options={{ title: 'Alarmes e Lembretes' }} />
+            <Stack.Screen name="DetalheLembrete" component={DetalheLembrete} options={{ title: 'Detalhe do Lembrete' }} />
             <Stack.Screen name="MainApp" component={MainApp} options={{ title: 'Menu Principal' }} />
-            <Stack.Screen name="UsoPessoal" component={UsoPessoal} options={{ title: 'Uso Pessoal' }} />
+            <Stack.Screen name="Configuracoes" component={Configuracoes} options={{ title: 'Configurações' }} />
           </>
         ) : (
           
@@ -58,10 +59,12 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <ReminderProvider>
-        <AppContent />
-      </ReminderProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ReminderProvider>
+          <AppContent />
+        </ReminderProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

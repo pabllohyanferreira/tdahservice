@@ -27,9 +27,8 @@ export default function Cadastro({ navigation }: any) {
 
     const success = await signUp(name, email, password);
     if (success) {
-      Alert.alert('Sucesso', 'Conta criada com sucesso!', [
-        { text: 'OK', onPress: () => navigation.navigate('Dashboard') }
-      ]);
+      Alert.alert('Sucesso', 'Conta criada com sucesso!');
+      // Removido: navigation.navigate('Dashboard')
     } else {
       Alert.alert('Erro', 'Email já cadastrado');
     }
