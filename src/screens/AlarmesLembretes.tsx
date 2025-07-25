@@ -136,13 +136,13 @@ export default function AlarmesLembretes({ navigation }: any) {
           </View>
         ) : (
           reminders.map((reminder, index) => (
-            <ReminderCard
+                  <ReminderCard
               key={reminder.id || reminder._id || index}
-              reminder={reminder}
-              onToggle={handleToggleReminder}
-              onEdit={handleEditReminder}
-              onDelete={handleDeleteReminder}
-            />
+                    reminder={reminder}
+                    onToggle={handleToggleReminder}
+                    onEdit={handleEditReminder}
+                    onDelete={handleDeleteReminder}
+                  />
           ))
         )}
       </ScrollView>
