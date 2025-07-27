@@ -6,7 +6,7 @@ import { Reminder } from '../types/reminder';
 
 interface ReminderCardProps {
   reminder: Reminder;
-  onPress: () => void;
+  onEdit: () => void;  // Alterado de onPress para onEdit
   onToggle: () => void;
   onDelete: () => void;
   navigation?: any;
@@ -14,7 +14,7 @@ interface ReminderCardProps {
 
 export const ReminderCard: React.FC<ReminderCardProps> = ({
   reminder,
-  onPress,
+  onEdit,  // Alterado de onPress para onEdit
   onToggle,
   onDelete,
   navigation,
@@ -93,7 +93,7 @@ export const ReminderCard: React.FC<ReminderCardProps> = ({
     if (navigation) {
       navigation.navigate('DetalheLembrete', { reminder });
     } else {
-      onPress(); // Fallback para o comportamento anterior
+      onEdit(); // Alterado de onPress para onEdit
     }
   };
 
@@ -376,4 +376,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-}); 
+});

@@ -227,14 +227,14 @@ export default function AlarmesLembretes({ navigation }: any) {
             <Text style={[styles.emptySubtext, { color: theme.text.muted }]}>Toque em "Adicionar Lembrete" para criar seu primeiro lembrete</Text>
           </View>
         ) : (
-          reminders.map((reminder, index) => (
-                  <ReminderCard
-              key={reminder.id || reminder._id || index}
-                    reminder={reminder}
-                    onToggle={handleToggleReminder}
-                    onEdit={handleEditReminder}
-                    onDelete={handleDeleteReminder}
-                  />
+          reminders.map((reminder) => (
+            <ReminderCard
+              key={reminder.id}
+              reminder={reminder}
+              onToggle={() => handleToggleReminder(reminder.id)}
+              onEdit={() => handleEditReminder(reminder)}  // Alterado de onPress para onEdit
+              onDelete={() => handleDeleteReminder(reminder.id)}
+            />
           ))
         )}
       </ScrollView>
