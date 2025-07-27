@@ -1,191 +1,379 @@
-import React from 'react';
-import { useNavigation } from '@react-navigation/native';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../contexts/ThemeContext';
 import { Reminder } from '../types/reminder';
-import { formatDate, formatTime } from '../utils/date';
 
 interface ReminderCardProps {
   reminder: Reminder;
-  onToggle: (id: string) => void;
-  onEdit: (reminder: Reminder) => void;
-  onDelete: (id: string) => void;
+  onPress: () => void;
+  onToggle: () => void;
+  onDelete: () => void;
+  navigation?: any;
 }
 
 export const ReminderCard: React.FC<ReminderCardProps> = ({
   reminder,
+  onPress,
   onToggle,
-  onEdit,
   onDelete,
+  navigation,
 }) => {
-  const navigation = useNavigation();
+  const { theme } = useTheme();
+  const [scaleAnim] = useState(new Animated.Value(1));
+  const [isPressed, setIsPressed] = useState(false);
+  
+  // Animações para o estado de conclusão
+  const [checkboxScale] = useState(new Animated.Value(1));
+  const [checkboxOpacity] = useState(new Animated.Value(reminder.isCompleted ? 1 : 0));
+  const [cardOpacity] = useState(new Animated.Value(reminder.isCompleted ? 0.7 : 1));
+  const [strikethroughWidth] = useState(new Animated.Value(reminder.isCompleted ? 1 : 0));
 
-  const handleDelete = () => {
-    Alert.alert(
-      'Excluir Lembrete',
-      'Tem certeza que deseja excluir este lembrete?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Excluir', style: 'destructive', onPress: () => onDelete(reminder.id) },
-      ]
-    );
+  // Efeito para animar mudanças no estado de conclusão
+  useEffect(() => {
+    const isCompleted = reminder.isCompleted;
+    
+    // Animação do checkbox
+    Animated.parallel([
+      Animated.spring(checkboxScale, {
+        toValue: isCompleted ? 1.2 : 1,
+        tension: 300,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.timing(checkboxOpacity, {
+        toValue: isCompleted ? 1 : 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Volta ao tamanho normal após a animação
+      if (isCompleted) {
+        Animated.spring(checkboxScale, {
+          toValue: 1,
+          tension: 200,
+          friction: 6,
+          useNativeDriver: true,
+        }).start();
+      }
+    });
+
+    // Animação da opacidade do card
+    Animated.timing(cardOpacity, {
+      toValue: isCompleted ? 0.7 : 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+
+    // Animação do texto riscado
+    Animated.timing(strikethroughWidth, {
+      toValue: isCompleted ? 1 : 0,
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
+  }, [reminder.isCompleted]);
+
+  const handlePressIn = () => {
+    setIsPressed(true);
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
   };
 
-  const isOverdue = () => {
-    return !reminder.isCompleted && new Date(reminder.dateTime) <= new Date();
+  const handlePressOut = () => {
+    setIsPressed(false);
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
   };
 
-  const getStatusColor = () => {
-    if (reminder.isCompleted) return '#4CAF50'; // Green for completed
-    if (isOverdue()) return '#F44336'; // Red for overdue
-    return '#9E9E9E'; // Gray for pending
+  const handleCardPress = () => {
+    if (navigation) {
+      navigation.navigate('DetalheLembrete', { reminder });
+    } else {
+      onPress(); // Fallback para o comportamento anterior
+    }
   };
 
-  const getStatusText = () => {
-    if (reminder.isCompleted) return 'Concluído';
-    if (isOverdue()) return 'Atrasado';
-    return 'Pendente';
+  const handleToggleWithAnimation = () => {
+    // Animação de feedback imediato no checkbox
+    Animated.sequence([
+      Animated.spring(checkboxScale, {
+        toValue: 0.8,
+        tension: 400,
+        friction: 3,
+        useNativeDriver: true,
+      }),
+      Animated.spring(checkboxScale, {
+        toValue: 1.1,
+        tension: 300,
+        friction: 4,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Chama a função original
+    onToggle();
   };
+
+  const formatDateTime = (date: Date | undefined) => {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+      return 'Data inválida';
+    }
+    
+    const now = new Date();
+    
+    // Resetar as horas para comparar apenas as datas
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const diffTime = dateOnly.getTime() - nowOnly.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      return 'Atrasado';
+    } else if (diffDays === 0) {
+      return 'Hoje';
+    } else if (diffDays === 1) {
+      return 'Amanhã';
+    } else {
+      return `${diffDays} dias`;
+    }
+  };
+
+  const getPriorityColor = () => {
+    if (!reminder.dateTime || !(reminder.dateTime instanceof Date) || isNaN(reminder.dateTime.getTime())) {
+      return theme.text.muted; // Cinza para datas inválidas
+    }
+    
+    const now = new Date();
+    const diffTime = reminder.dateTime.getTime() - now.getTime();
+    const diffHours = diffTime / (1000 * 60 * 60);
+    
+    if (diffHours < 0) return theme.action.logout; // Atrasado
+    if (diffHours < 24) return '#FF9800'; // Urgente (laranja)
+    if (diffHours < 72) return '#FFC107'; // Moderado (amarelo)
+    return theme.action.success; // Normal (verde)
+  };
+
+  const isOverdue = reminder.dateTime && reminder.dateTime instanceof Date && !isNaN(reminder.dateTime.getTime()) 
+    ? reminder.dateTime < new Date() && !reminder.isCompleted 
+    : false;
 
   return (
-    console.log('dateTime do lembrete:', reminder.dateTime),
-    <View style={[
-      styles.container,
-      { backgroundColor: '#23272F', borderColor: '#373B44' },
-      reminder.isCompleted && { backgroundColor: '#1A1D23' },
-      isOverdue() && { borderColor: '#F44336', backgroundColor: '#2d1a1a' },
-      styles.shadow
-    ]}>
-      <TouchableOpacity 
-        style={styles.content} 
-        onPress={() => navigation.navigate('DetalheLembrete', { reminder })}
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.background.card,
+          transform: [{ scale: scaleAnim }],
+          opacity: cardOpacity,
+        },
+      ]}
+    >
+      <TouchableOpacity
+        style={styles.content}
+        onPress={handleCardPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         activeOpacity={0.8}
       >
-        <View style={[styles.checkbox, { borderColor: '#4CAF50', backgroundColor: '#23272F' }] }>
-          {reminder.isCompleted && <Text style={[styles.checkmark, { color: '#4CAF50' }]}>✓</Text>}
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={[styles.title, { color: '#fff' }, reminder.isCompleted && styles.completedText]}>
-            {reminder.title}
-          </Text>
-          {reminder.description && (
-            <Text style={[styles.description, { color: '#B0B0B0' }, reminder.isCompleted && styles.completedText]}>
-              {reminder.description}
-            </Text>
-          )}
-          <View style={styles.dateContainer}>
-            <Text style={[styles.date, { color: getStatusColor() }]}>
-              {formatDate(new Date(reminder.dateTime))}
-            </Text>
-            <View style={[styles.badge, { backgroundColor: getStatusColor() }]}> 
-              <Text style={styles.badgeText}>{getStatusText()}</Text>
+        <View style={styles.leftSection}>
+          <Animated.View
+            style={[
+              styles.checkboxContainer,
+              {
+                transform: [{ scale: checkboxScale }],
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={[
+                styles.checkbox,
+                {
+                  backgroundColor: reminder.isCompleted
+                    ? theme.action.success
+                    : 'transparent',
+                  borderColor: reminder.isCompleted
+                    ? theme.action.success
+                    : theme.state.border,
+                },
+              ]}
+              onPress={handleToggleWithAnimation}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Animated.View
+                style={[
+                  styles.checkmarkContainer,
+                  {
+                    opacity: checkboxOpacity,
+                    transform: [{ scale: checkboxOpacity }],
+                  },
+                ]}
+              >
+                <Ionicons name="checkmark" size={16} color="#fff" />
+              </Animated.View>
+            </TouchableOpacity>
+          </Animated.View>
+          
+          <View style={styles.textContainer}>
+            <View style={styles.titleContainer}>
+              <Text
+                style={[
+                  styles.title,
+                  {
+                    color: theme.text.primary,
+                  },
+                ]}
+                numberOfLines={2}
+              >
+                {reminder.title}
+              </Text>
+              {/* Linha animada para o efeito de riscado */}
+              <Animated.View
+                style={[
+                  styles.strikethrough,
+                  {
+                    backgroundColor: theme.text.primary,
+                    width: strikethroughWidth.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%'],
+                    }),
+                  },
+                ]}
+              />
+            </View>
+            
+            {reminder.description && (
+              <Text
+                style={[
+                  styles.description,
+                  { color: theme.text.secondary },
+                ]}
+                numberOfLines={1}
+              >
+                {reminder.description}
+              </Text>
+            )}
+            
+            <View style={styles.metaContainer}>
+              <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor() }]} />
+              <Text
+                style={[
+                  styles.dateTime,
+                  { 
+                    color: isOverdue 
+                      ? theme.action.logout 
+                      : theme.text.muted 
+                  },
+                ]}
+              >
+                {formatDateTime(reminder.dateTime)}
+              </Text>
             </View>
           </View>
         </View>
+
+        <View style={styles.rightSection}>
+          <TouchableOpacity
+            style={[styles.deleteButton, { backgroundColor: theme.action.logout }]}
+            onPress={onDelete}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="trash-outline" size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => onEdit(reminder)}>
-          <Text style={styles.actionText}>✏️</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
-          <Text style={styles.actionText}>🗑️</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
-    padding: 16,
     marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  shadow: {
+    borderRadius: 16,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  completed: {
-    opacity: 0.7,
-  },
-  overdue: {
-    borderWidth: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  leftSection: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  checkboxContainer: {
+    marginRight: 12,
   },
   checkbox: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    marginRight: 12,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  checkmark: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  checkmarkContainer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   textContainer: {
     flex: 1,
   },
+  titleContainer: {
+    position: 'relative',
+    marginBottom: 4,
+  },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  strikethrough: {
+    position: 'absolute',
+    height: 1,
+    top: '50%',
+    left: 0,
+    opacity: 0.8,
   },
   description: {
     fontSize: 14,
-    marginBottom: 4,
+    marginBottom: 8,
+    lineHeight: 18,
   },
-  dateContainer: {
+  metaContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  date: {
+  priorityIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  dateTime: {
     fontSize: 12,
     fontWeight: '500',
   },
-  status: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
+  rightSection: {
+    marginLeft: 12,
   },
-  completedText: {
-    textDecorationLine: 'line-through',
-  },
-  actions: {
-    flexDirection: 'row',
-    marginLeft: 8,
-  },
-  actionButton: {
-    padding: 8,
-    marginLeft: 4,
-  },
-  actionText: {
-    fontSize: 16,
-  },
-  badge: {
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 8,
-    minWidth: 60,
+  deleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
   },
 }); 

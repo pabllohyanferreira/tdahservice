@@ -17,11 +17,21 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "NOTIFICATIONS",
+        "VIBRATE",
+        "WAKE_LOCK"
+      ]
     },
     "web": {
       "favicon": "./assets/logo.png"
     },
-    "scheme": "tdahservice"
+    "scheme": "tdahservice",
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
   }
 }

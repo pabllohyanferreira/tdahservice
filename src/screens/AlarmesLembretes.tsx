@@ -1,16 +1,17 @@
 import React, { useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TextInput, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
   Alert,
   Modal,
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../components/Button';
 import { ReminderCard } from '../components/ReminderCard';
 import { DateTimePickerModal } from '../components/DateTimePickerModal';
@@ -19,8 +20,14 @@ import { Reminder, CreateReminderData } from '../types/reminder';
 import { formatDate, formatTime } from '../utils/date';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useTheme } from '../contexts/ThemeContext';
+import { validateReminder, sanitizeString } from '../utils/validation';
+import { handleJSError, showError } from '../utils/errorHandler';
+// Adicionar esta importação no início do arquivo
+import { useToast } from '../contexts/ToastContext';
 
 export default function AlarmesLembretes({ navigation }: any) {
+  // Adicionar esta linha junto com os outros hooks
+  const { showToast } = useToast();
   const { reminders, addReminder, updateReminder, deleteReminder, isLoading, toggleReminder } = useReminders();
   const { theme } = useTheme();
   const [showModal, setShowModal] = useState(false);
@@ -47,33 +54,48 @@ export default function AlarmesLembretes({ navigation }: any) {
   }, []);
 
   const handleSaveReminder = useCallback(async () => {
-    if (!title.trim()) {
-      Alert.alert('Erro', 'Por favor, insira um título para o lembrete');
-      return;
-    }
-
-    // Verificar se a data não é no passado
-    const now = new Date();
-    if (dateTime < now) {
-      Alert.alert('Erro', 'A data e hora do lembrete não pode ser no passado');
-      return;
-    }
-
     try {
+      // Preparar dados para validação
+      const reminderData = {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        dateTime: dateTime instanceof Date && !isNaN(dateTime.getTime()) ? dateTime : new Date(),
+      };
+
+      // Validação completa dos dados
+      const validation = validateReminder(reminderData);
+      if (!validation.isValid) {
+        Alert.alert('Dados Inválidos', validation.errors.join('\n'));
+        return;
+      }
+
+      // Verificar se a data não é no passado (apenas para novos lembretes)
+      if (!editingReminder) {
+        const now = new Date();
+        const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutos de tolerância
+        
+        if (dateTime < fiveMinutesFromNow) {
+          Alert.alert(
+            'Data Inválida',
+            'A data e hora do lembrete deve ser pelo menos 5 minutos no futuro para garantir que a notificação seja agendada corretamente.'
+          );
+          return;
+        }
+      }
+
+      // Sanitizar dados
+      const sanitizedData = {
+        title: sanitizeString(reminderData.title),
+        description: reminderData.description ? sanitizeString(reminderData.description) : undefined,
+        dateTime: reminderData.dateTime,
+      };
+
       let success = false;
       
       if (editingReminder) {
-        success = await updateReminder(editingReminder.id, {
-          title: title.trim(),
-          description: description.trim() || undefined,
-          dateTime: dateTime instanceof Date && !isNaN(dateTime.getTime()) ? dateTime : new Date(),
-        });
+        success = await updateReminder(editingReminder.id, sanitizedData);
       } else {
-        const payload: CreateReminderData = {
-          title: title.trim(),
-          description: description.trim() || undefined,
-          dateTime,
-        };
+        const payload: CreateReminderData = sanitizedData;
         success = await addReminder(payload);
       }
 
@@ -83,33 +105,93 @@ export default function AlarmesLembretes({ navigation }: any) {
         setTitle('');
         setDescription('');
         setDateTime(new Date());
-        Alert.alert('Sucesso', editingReminder ? 'Lembrete atualizado!' : 'Lembrete criado!');
+        Alert.alert('Sucesso', editingReminder ? 'Lembrete atualizado com sucesso!' : 'Lembrete criado com sucesso!');
       } else {
-        Alert.alert('Erro', 'Não foi possível salvar o lembrete');
+        Alert.alert('Erro ao Salvar', 'Não foi possível salvar o lembrete. Verifique sua conexão e tente novamente.');
       }
     } catch (error) {
-      Alert.alert('Erro', 'Ocorreu um erro ao salvar o lembrete');
+      const appError = handleJSError(error as Error, 'Salvar Lembrete - Formulário');
+      Alert.alert('Erro Inesperado', 'Ocorreu um erro ao salvar o lembrete. Tente novamente.');
+      console.error('Erro no handleSaveReminder:', appError);
     }
   }, [title, description, dateTime, editingReminder, addReminder, updateReminder]);
 
   const handleDeleteReminder = useCallback(async (id: string) => {
-    const success = await deleteReminder(id);
-    if (success) {
-      Alert.alert('Sucesso', 'Lembrete excluído!');
-    } else {
-      Alert.alert('Erro', 'Não foi possível excluir o lembrete');
+    try {
+      const success = await deleteReminder(id);
+      if (success) {
+        Alert.alert('Sucesso', 'Lembrete excluído com sucesso!');
+      } else {
+        Alert.alert('Erro ao Excluir', 'Não foi possível excluir o lembrete. Verifique sua conexão e tente novamente.');
+      }
+    } catch (error) {
+      const appError = handleJSError(error as Error, 'Excluir Lembrete');
+      Alert.alert('Erro Inesperado', 'Ocorreu um erro ao excluir o lembrete. Tente novamente.');
+      console.error('Erro no handleDeleteReminder:', appError);
     }
   }, [deleteReminder]);
 
+  // Melhorar a função handleToggleReminder para fornecer feedback ao usuário
   const handleToggleReminder = useCallback(async (id: string) => {
-    await toggleReminder(id);
-  }, [toggleReminder]);
+    try {
+      const reminderToToggle = reminders.find(r => r.id === id);
+      if (!reminderToToggle) {
+        Alert.alert('Erro', 'Lembrete não encontrado');
+        return;
+      }
+      
+      const newStatus = !reminderToToggle.isCompleted;
+      const actionText = newStatus ? 'concluído' : 'pendente';
+      
+      // Não precisamos definir isLoading manualmente, pois ele é gerenciado pelo contexto
+      // e será atualizado automaticamente quando toggleReminder for chamado
+      
+      const success = await toggleReminder(id);
+      
+      if (success) {
+        // Feedback visual de sucesso
+        showToast(`Lembrete marcado como ${actionText}`, 'success', 2000);
+      } else {
+        Alert.alert('Erro ao Atualizar', `Não foi possível marcar o lembrete como ${actionText}. Tente novamente.`);
+      }
+    } catch (error) {
+      const appError = handleJSError(error as Error, 'Toggle Lembrete - Interface');
+      Alert.alert('Erro Inesperado', 'Ocorreu um erro ao atualizar o lembrete. Tente novamente.');
+      console.error('Erro no handleToggleReminder:', appError);
+    }
+    // Removemos o bloco finally com setIsLoading(false) pois não precisamos gerenciar isso manualmente
+  }, [toggleReminder, reminders, showToast]);
 
   const getRemindersByStatus = () => {
     const now = new Date();
-    const pending = reminders.filter(r => !r.isCompleted && r.dateTime > now);
+    
+    const pending = reminders.filter(r => {
+      if (r.isCompleted || !r.dateTime || !(r.dateTime instanceof Date) || isNaN(r.dateTime.getTime())) {
+        return false;
+      }
+      
+      // Para lembretes de hoje, considerar como pendente se ainda não passou da hora
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const reminderDate = new Date(r.dateTime.getFullYear(), r.dateTime.getMonth(), r.dateTime.getDate());
+      
+      if (reminderDate.getTime() === today.getTime()) {
+        // Se é hoje, verificar se a hora ainda não passou
+        return r.dateTime > now;
+      }
+      
+      // Se não é hoje, verificar se é no futuro
+      return r.dateTime > now;
+    });
+    
     const completed = reminders.filter(r => r.isCompleted);
-    const overdue = reminders.filter(r => !r.isCompleted && r.dateTime <= now);
+    
+    const overdue = reminders.filter(r => {
+      if (r.isCompleted || !r.dateTime || !(r.dateTime instanceof Date) || isNaN(r.dateTime.getTime())) {
+        return false;
+      }
+      
+      return r.dateTime <= now;
+    });
     
     return { pending, completed, overdue };
   };
@@ -120,12 +202,22 @@ export default function AlarmesLembretes({ navigation }: any) {
     <View style={[styles.container, { backgroundColor: theme.background.primary }]}>
       {isLoading && <LoadingSpinner />}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.text.primary }]}>Lembretes</Text>
+        <Text style={[styles.title, { color: theme.text.primary }]}>Lembretes</Text> 
+      </View>
+
+      <View style={styles.addButtonContainer}>
         <Button
           title="Adicionar Lembrete"
           onPress={handleAddReminder}
           variant="addLembrete"
         />
+        
+        <TouchableOpacity 
+          style={[styles.calendarButton, { backgroundColor: theme.action.success }]}
+          onPress={() => navigation.navigate('Calendario')}
+        >
+          <Ionicons name="calendar" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={[styles.content, { backgroundColor: theme.background.primary }]} showsVerticalScrollIndicator={false}>
@@ -189,7 +281,10 @@ export default function AlarmesLembretes({ navigation }: any) {
               <View style={styles.dateTimeButtonContent}>
                 <Text style={[styles.dateTimeButtonLabel, { color: '#888' }]}>Data e Hora</Text>
                 <Text style={[styles.dateTimeButtonValue, { color: '#fff' }]}>
-                  {formatDate(dateTime)} às {formatTime(dateTime)}
+                  {dateTime && dateTime instanceof Date && !isNaN(dateTime.getTime()) 
+                    ? `${formatDate(dateTime)} às ${formatTime(dateTime)}`
+                    : 'Selecione uma data'
+                  }
                 </Text>
               </View>
               <Text style={styles.dateTimeButtonIcon}>📅</Text>
@@ -231,11 +326,29 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     paddingTop: 60,
+    alignItems: 'center',
+  },
+  addButtonContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  calendarButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
     textAlign: 'center',
   },
   content: {

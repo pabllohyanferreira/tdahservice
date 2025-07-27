@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { colors } from '../theme/colors';
+import { darkColors } from '../theme/colors';
 import { CalendarPicker } from './CalendarPicker';
 import { ClockPicker } from './ClockPicker';
 
@@ -43,6 +43,9 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
   }, [selectedDateTime, onClose]);
 
   const formatDateTime = (date: Date) => {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+      return 'Data inválida';
+    }
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
       month: '2-digit',

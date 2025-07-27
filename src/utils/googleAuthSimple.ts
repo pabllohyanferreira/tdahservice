@@ -9,7 +9,8 @@ export interface GoogleUser {
 }
 
 // Configuração do Google OAuth
-const GOOGLE_CLIENT_ID = 'SEU_GOOGLE_CLIENT_ID_AQUI'; // Substitua pelo seu Client ID
+// Substitua pelo seu Client ID real do Google
+const GOOGLE_CLIENT_ID = 'seu-client-id-real-do-google.apps.googleusercontent.com';
 const REDIRECT_URI = 'tdahservice://auth';
 
 export const googleAuthSimple = {
@@ -58,4 +59,4 @@ export const googleAuthSimple = {
 export const configureGoogleAuthSimple = (clientId: string) => {
   // Atualizar as configurações com as credenciais fornecidas
   console.log('Configuração do Google Auth Simple:', { clientId });
-}; 
+};

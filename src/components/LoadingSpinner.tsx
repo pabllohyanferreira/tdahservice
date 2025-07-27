@@ -1,18 +1,72 @@
-import React from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated, Easing } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
 
-export const LoadingSpinner: React.FC<{ size?: 'small' | 'large', color?: string }> = ({ size = 'large', color = '#007AFF' }) => (
-  <View style={styles.overlay}>
-    <ActivityIndicator size={size} color={color} />
-  </View>
-);
+interface LoadingSpinnerProps {
+  size?: 'small' | 'medium' | 'large';
+  color?: string;
+}
+
+export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
+  size = 'medium', 
+  color 
+}) => {
+  const { theme } = useTheme();
+  const spinValue = useRef(new Animated.Value(0)).current;
+  
+  const spinnerColor = color || theme.action.primary;
+  
+  const sizeMap = {
+    small: 20,
+    medium: 32,
+    large: 48,
+  };
+
+  useEffect(() => {
+    const spinAnimation = Animated.loop(
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    
+    spinAnimation.start();
+    
+    return () => spinAnimation.stop();
+  }, []);
+
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  return (
+    <View style={styles.container}>
+      <Animated.View
+        style={[
+          styles.spinner,
+          {
+            width: sizeMap[size],
+            height: sizeMap[size],
+            borderColor: spinnerColor,
+            borderTopColor: 'transparent',
+            transform: [{ rotate: spin }],
+          },
+        ]}
+      />
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.5)',
+  container: {
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 999,
+  },
+  spinner: {
+    borderRadius: 50,
+    borderWidth: 3,
   },
 }); 

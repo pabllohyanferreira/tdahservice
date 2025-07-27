@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { darkColors, lightColors, ThemeColors } from '../theme/colors';
+import { darkColors, lightColors, purpleTheme, ThemeColors } from '../theme/colors';
 import Storage from '../utils/storage';
 
-export type ThemeType = 'dark' | 'light';
+export type ThemeType = 'dark' | 'light' | 'purple';
 
 interface ThemeContextData {
   theme: ThemeColors;
   themeType: ThemeType;
   toggleTheme: () => void;
+  setTheme: (themeType: ThemeType) => void;
 }
 
 const ThemeContext = createContext<ThemeContextData | undefined>(undefined);
@@ -25,22 +26,40 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     (async () => {
       const storedTheme = await Storage.getItem('@TDAHService:theme');
-      if (storedTheme === 'light' || storedTheme === 'dark') {
+      if (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'purple') {
         setThemeType(storedTheme);
-        setTheme(storedTheme === 'dark' ? darkColors : lightColors);
+        setTheme(
+          storedTheme === 'dark' ? darkColors : 
+          storedTheme === 'light' ? lightColors : 
+          purpleTheme
+        );
       }
     })();
   }, []);
 
   const toggleTheme = useCallback(async () => {
-    const newType = themeType === 'dark' ? 'light' : 'dark';
+    const newType = themeType === 'dark' ? 'light' : themeType === 'light' ? 'purple' : 'dark';
     setThemeType(newType);
-    setTheme(newType === 'dark' ? darkColors : lightColors);
+    setTheme(
+      newType === 'dark' ? darkColors : 
+      newType === 'light' ? lightColors : 
+      purpleTheme
+    );
     await Storage.setItem('@TDAHService:theme', newType);
   }, [themeType]);
 
+  const setThemeDirectly = useCallback(async (newThemeType: ThemeType) => {
+    setThemeType(newThemeType);
+    setTheme(
+      newThemeType === 'dark' ? darkColors : 
+      newThemeType === 'light' ? lightColors : 
+      purpleTheme
+    );
+    await Storage.setItem('@TDAHService:theme', newThemeType);
+  }, []);
+
   return (
-    <ThemeContext.Provider value={{ theme, themeType, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, themeType, toggleTheme, setTheme: setThemeDirectly }}>
       {children}
     </ThemeContext.Provider>
   );

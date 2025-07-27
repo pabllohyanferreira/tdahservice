@@ -9,6 +9,7 @@ const reminderSchema = Joi.object({
   title: Joi.string().min(1).max(100).required(),
   description: Joi.string().max(500).allow('').optional(),
   dateTime: Joi.date().iso().required(),
+  status: Joi.string().valid('pending', 'completed', 'overdue').optional(),
   priority: Joi.string().valid('low', 'medium', 'high').optional(),
   category: Joi.string().max(50).optional().allow('')
 });
@@ -76,12 +77,18 @@ export const updateReminder = async (req: AuthRequest, res: Response) => {
   const updateSchema = reminderSchema.fork(['title', 'dateTime'], (field) => field.optional());
   const { error } = updateSchema.validate(req.body);
   if (error) {
+    logger.error('Erro de validação no update:', { error: error.details[0].message, body: req.body });
     return res.status(400).json({ error: error.details[0].message });
   }
   try {
     const userId = req.user.userId;
     const { id } = req.params;
     const updateData = req.body;
+
+    // Validação do ID
+    if (!id || id === 'undefined' || id === 'null') {
+      return res.status(400).json({ error: 'ID do lembrete é obrigatório' });
+    }
 
     const reminder = await Reminder.findOneAndUpdate(
       { _id: id, userId },
@@ -105,6 +112,11 @@ export const deleteReminder = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
+
+    // Validação do ID
+    if (!id || id === 'undefined' || id === 'null') {
+      return res.status(400).json({ error: 'ID do lembrete é obrigatório' });
+    }
 
     const reminder = await Reminder.findOneAndDelete({ _id: id, userId });
 

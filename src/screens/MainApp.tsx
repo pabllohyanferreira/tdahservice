@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack' with { 'resolution-mode': 'import' };
+import { useTheme } from '../contexts/ThemeContext';
+import { ThemeBackground } from '../components/ThemeBackground';
 
 type RootStackParamList = {
   MainApp: undefined;
@@ -11,25 +13,21 @@ type Props = {
 };
 
 export default function MainApp({ navigation }: Props) {
+  const { theme, themeType } = useTheme();
+  
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Selecione uma Categoria</Text>
-      {/*
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('UsoPessoal')}
-      >
-        <Text style={styles.buttonText}>Uso Pessoal</Text>
-      </TouchableOpacity>
-      */}
-    </View>
+    <ThemeBackground>
+      <View style={styles.container}>
+        <Text style={[styles.title, { color: theme.text.primary }]}>Selecione uma Categoria</Text>
+      {}
+      </View>
+    </ThemeBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#23272F',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -37,10 +35,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 50,
     fontSize: 30,
-    color: '#F5F6FA',
     fontWeight: 'bold',
-    
-
   },
   button: {
     backgroundColor: '#5e4bfe',
