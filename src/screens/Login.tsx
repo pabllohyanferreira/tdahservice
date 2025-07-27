@@ -80,7 +80,7 @@ export default function Login({ navigation }: any) {
   return (
     <ThemeBackground>
       <View style={styles.container}>
-        <Text style={[styles.title, { color: theme.text.primary }]}>Login</Text>
+        <Text style={[styles.title, { color: theme.text.primary }]}>TDAH Service</Text>
       
         <TextInput 
           style={[styles.input, { 
@@ -115,6 +115,8 @@ export default function Login({ navigation }: any) {
           title={isLoading ? 'Entrando...' : 'Entrar'}
           onPress={handleLogin}
           disabled={isLoading}
+          style={{ width: 280 }}
+          
         />
       
         <GoogleButton
@@ -152,7 +154,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
   },
-  link: { 
+  link: {
     marginTop: 12, 
     fontSize: 15 
   },
