@@ -21,12 +21,24 @@ export const validateEmail = (email: string): ValidationResult => {
   if (!email) {
     errors.push('Email é obrigatório');
   } else {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    const trimmedEmail = email.trim().toLowerCase();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    
+    if (!emailRegex.test(trimmedEmail)) {
       errors.push('Email deve ter um formato válido');
     }
-    if (email.length > 254) {
+    
+    if (trimmedEmail.length > 254) {
       errors.push('Email deve ter no máximo 254 caracteres');
+    }
+    
+    // Validações adicionais
+    if (trimmedEmail.includes('..')) {
+      errors.push('Email não pode conter pontos consecutivos');
+    }
+    
+    if (trimmedEmail.startsWith('.') || trimmedEmail.endsWith('.')) {
+      errors.push('Email não pode começar ou terminar com ponto');
     }
   }
   
@@ -74,7 +86,9 @@ export const validateName = (name: string): ValidationResult => {
     if (trimmedName.length > 100) {
       errors.push('Nome deve ter no máximo 100 caracteres');
     }
-    if (!/^[a-zA-ZÀ-ÿ\s]+$/.test(trimmedName)) {
+    // Regex melhorada para nomes brasileiros
+    const nameRegex = /^[a-zA-ZÀ-ÿ\u00C0-\u017F\s]+$/;
+    if (!nameRegex.test(trimmedName)) {
       errors.push('Nome deve conter apenas letras e espaços');
     }
   }

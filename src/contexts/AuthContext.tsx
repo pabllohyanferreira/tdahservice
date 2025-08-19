@@ -53,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const loadStoredUser = useCallback(async () => {
     try {
@@ -75,7 +76,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signIn = useCallback(
     async (email: string, password: string): Promise<boolean> => {
+      if (isAuthenticating) {
+        return false; // Evita múltiplas requisições
+      }
+      
       try {
+        setIsAuthenticating(true);
         setIsLoading(true);
 
         // Validação dos dados de entrada
@@ -91,7 +97,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Sanitizar dados
         const sanitizedEmail = sanitizeString(email).toLowerCase();
-        const sanitizedPassword = password; // Não sanitizar senha para não alterar
+        const sanitizedPassword = password; // Não sanitizar senha
+        
+        // Validar se senha não está vazia
+        if (!sanitizedPassword || sanitizedPassword.trim().length === 0) {
+          const error = handleJSError(
+            new Error("Senha não pode estar vazia"),
+            "Login - Validação"
+          );
+          showError(error, "Dados Inválidos");
+          return false;
+        }
 
         const apiBaseUrl = await getApiBaseUrl();
         console.log(`🔐 Tentando login em: ${apiBaseUrl}`);
@@ -133,12 +149,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const appError = handleJSError(error as Error, "Login - Conectividade");
         showError(appError, "Erro de Conexão");
         return false;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
+              } finally {
+          setIsAuthenticating(false);
+          setIsLoading(false);
+        }
+      },
+      [isAuthenticating]
+    );
 
   const signUp = useCallback(
     async (name: string, email: string, password: string): Promise<boolean> => {

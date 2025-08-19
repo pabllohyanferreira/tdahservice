@@ -74,6 +74,12 @@ export default function AlarmesLembretes({ navigation }: any) {
         const now = new Date();
         const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutos de tolerância
         
+        // Validar se a data é válida primeiro
+        if (!(dateTime instanceof Date) || isNaN(dateTime.getTime())) {
+          Alert.alert('Data Inválida', 'Por favor, selecione uma data válida.');
+          return;
+        }
+        
         if (dateTime < fiveMinutesFromNow) {
           Alert.alert(
             'Data Inválida',

@@ -52,7 +52,11 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Carrega lembretes do backend ou local
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchReminders = async () => {
+      if (!isMounted) return;
+      
       setIsLoading(true);
       try {
         const token = await Storage.getItem("@TDAHService:token");
@@ -117,19 +121,31 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({
                 : new Date(),
             };
           });
-          setReminders(mappedReminders);
-          await Storage.setItem("@TDAHService:reminders", mappedReminders);
+          if (isMounted) {
+            setReminders(mappedReminders);
+            await Storage.setItem("@TDAHService:reminders", mappedReminders);
+          }
         } else {
-          setReminders([]);
+          if (isMounted) {
+            setReminders([]);
+          }
         }
       } catch (error) {
-        setReminders([]);
+        if (isMounted) {
+          setReminders([]);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
     fetchReminders();
-  }, []);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [scheduleReminderNotification, cancelReminderNotification]);
 
   // Adiciona lembrete
   const addReminder = useCallback(

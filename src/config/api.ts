@@ -111,23 +111,26 @@ export const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
 ) => {
-  const baseUrl = await getApiBaseUrl();
-  const url = `${baseUrl}${endpoint}`;
-  
-  const config: RequestInit = {
-    ...options,
-    headers: {
-      ...API_CONFIG.DEFAULT_HEADERS,
-      ...options.headers,
-    },
-  };
-  
   try {
-    console.log(`📡 Fazendo requisição para: ${url}`);
-    const response = await fetch(url, config);
+    const baseUrl = await getApiBaseUrl();
+    const url = `${baseUrl}${endpoint}`;
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+    
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        ...API_CONFIG.DEFAULT_HEADERS,
+        ...options.headers,
+      },
+    });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
-      console.error(`❌ Erro HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     
     const data = await response.json();
@@ -137,9 +140,10 @@ export const apiRequest = async (
       status: response.status,
       data,
     };
-  } catch (error) {
-    console.error('❌ Erro na requisição API:', error);
-    console.error('URL tentada:', url);
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      throw new Error('Timeout na requisição');
+    }
     throw error;
   }
 };
