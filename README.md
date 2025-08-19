@@ -148,8 +148,8 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 ## 📞 Suporte
 
 - **Documentação:** [docs/README.md](./docs/README.md)
-- **Issues:** GitHub Issues
-- **Email:** seu-email@exemplo.com
+- **Issues:** pabllohyanferreira Issues
+- **Email:** pablohyan64@gmail.com
 
 ---
 
