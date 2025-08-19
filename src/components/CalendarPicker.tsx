@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { colors } from '../theme/colors';
+import { darkColors } from '../theme/colors';
 
 interface CalendarPickerProps {
   selectedDate: Date;
@@ -150,14 +150,15 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 16,
+    padding: 12,
     marginBottom: 16,
+    maxHeight: 240,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   navButton: {
     width: 40,
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
   },
   weekDaysContainer: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   weekDayCell: {
     flex: 1,
@@ -218,7 +219,7 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 1,
+    margin: 0.5,
   },
   dayText: {
     fontSize: 16,

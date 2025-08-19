@@ -10,6 +10,7 @@ import AlarmesLembretes from './src/screens/AlarmesLembretes';
 import Calendario from './src/screens/Calendario';
 import Configuracoes from './src/screens/Configuracoes';
 import DetalheLembrete from './src/screens/DetalheLembrete';
+import Notas from './src/screens/Notas';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { ReminderProvider } from './src/contexts/ReminderContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
@@ -35,6 +36,7 @@ function AppContent() {
             <Stack.Screen name="Dashboard" component={Dashboard} options={{ headerShown: false }} />
             <Stack.Screen name="AlarmesLembretes" component={AlarmesLembretes} options={{ title: 'Alarmes e Lembretes' }} />
             <Stack.Screen name="Calendario" component={Calendario} options={{ title: 'Calendário' }} />
+            <Stack.Screen name="Notas" component={Notas} options={{ title: 'Bloco de Notas' }} />
             <Stack.Screen name="DetalheLembrete" component={DetalheLembrete} options={{ title: 'Detalhe do Lembrete' }} />
             <Stack.Screen name="MainApp" component={MainApp} options={{ title: 'Menu Principal' }} />
             <Stack.Screen name="Configuracoes" component={Configuracoes} options={{ title: 'Configurações' }} />

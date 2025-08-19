@@ -7,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { NotificationManager } from '../components/NotificationManager';
 import { ThemeBackground } from '../components/ThemeBackground';
 
+
 const { width } = Dimensions.get('window');
 
 export default function Dashboard({ navigation }: any) {
@@ -17,6 +18,8 @@ export default function Dashboard({ navigation }: any) {
   // Animações
   const fadeAnim = useState(new Animated.Value(0))[0];
   const slideAnim = useState(new Animated.Value(50))[0];
+  
+
   
   // Estatísticas calculadas
   const completedTasks = reminders.filter(r => r.isCompleted).length;
@@ -189,17 +192,7 @@ export default function Dashboard({ navigation }: any) {
           </View>
         </View>
 
-        {totalTasks === 0 && (
-          <View style={[styles.emptyState, { backgroundColor: theme.background.card }]}>
-            <Ionicons name="add-circle-outline" size={48} color={theme.text.muted} />
-            <Text style={[styles.emptyStateText, { color: theme.text.muted }]}>
-              Nenhum lembrete ainda
-            </Text>
-            <Text style={[styles.emptyStateSubtext, { color: theme.text.placeholder }]}>
-              Crie seu primeiro lembrete para começar
-            </Text>
-          </View>
-        )}
+
 
         <View style={styles.menuContainer}>
           <TouchableOpacity 
@@ -210,20 +203,33 @@ export default function Dashboard({ navigation }: any) {
           >
             <View style={styles.menuButtonContent}>
               <Ionicons name="alarm" size={24} color="#fff" />
-              <Text style={styles.menuButtonText}>⏰ Alarmes e Lembretes</Text>
+              <Text style={styles.menuButtonText}>Alarmes e Lembretes</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#fff" />
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[styles.menuButton, { backgroundColor: theme.action.success }]} 
+            style={[styles.menuButton, { backgroundColor: theme.action.primary }]} 
             onPress={() => navigation.navigate('Calendario')}
             accessibilityLabel="Calendário"
             accessibilityHint="Abre a visualização do calendário"
           >
             <View style={styles.menuButtonContent}>
               <Ionicons name="calendar" size={24} color="#fff" />
-              <Text style={styles.menuButtonText}>📅 Calendário</Text>
+              <Text style={styles.menuButtonText}>Calendário</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#fff" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.menuButton, { backgroundColor: theme.action.primary }]} 
+            onPress={() => navigation.navigate('Notas')}
+            accessibilityLabel="Bloco de Notas"
+            accessibilityHint="Abre o bloco de notas"
+          >
+            <View style={styles.menuButtonContent}>
+              <Ionicons name="document-text" size={24} color="#fff" />
+              <Text style={styles.menuButtonText}>Bloco de Notas</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#fff" />
           </TouchableOpacity>
@@ -321,23 +327,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  emptyState: {
-    padding: 40,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  emptyStateText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyStateSubtext: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
+
   menuContainer: { 
     gap: 16 
   },
@@ -379,4 +369,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
 }); 

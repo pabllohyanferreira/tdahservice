@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert } from 'react-native';
-import { colors } from '../theme/colors';
+import { darkColors } from '../theme/colors';
 
 interface ClockPickerProps {
   selectedTime: Date;
@@ -225,16 +225,17 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 16,
+    padding: 12,
     marginBottom: 16,
     alignItems: 'center',
+    maxHeight: 240,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   title: {
     fontSize: 18,
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   timeDisplay: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   timeText: {
     fontSize: 32,
@@ -264,7 +265,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   timeSelector: {
     alignItems: 'center',

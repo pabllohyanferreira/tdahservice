@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from 'react-native';
 import { darkColors } from '../theme/colors';
 import { CalendarPicker } from './CalendarPicker';
 import { ClockPicker } from './ClockPicker';
@@ -71,43 +71,49 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          <View style={styles.dateTimeDisplay}>
-            <Text style={styles.dateTimeText}>{formatDateTime(currentDateTime)}</Text>
-          </View>
+          <ScrollView 
+            style={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            <View style={styles.dateTimeDisplay}>
+              <Text style={styles.dateTimeText}>{formatDateTime(currentDateTime)}</Text>
+            </View>
 
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'calendar' && styles.activeTab]}
-              onPress={() => setActiveTab('calendar')}
-            >
-              <Text style={[styles.tabText, activeTab === 'calendar' && styles.activeTabText]}>
-                📅 Calendário
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'clock' && styles.activeTab]}
-              onPress={() => setActiveTab('clock')}
-            >
-              <Text style={[styles.tabText, activeTab === 'clock' && styles.activeTabText]}>
-                🕐 Relógio
-              </Text>
-            </TouchableOpacity>
-          </View>
+            <View style={styles.tabContainer}>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'calendar' && styles.activeTab]}
+                onPress={() => setActiveTab('calendar')}
+              >
+                <Text style={[styles.tabText, activeTab === 'calendar' && styles.activeTabText]}>
+                  📅 Calendário
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'clock' && styles.activeTab]}
+                onPress={() => setActiveTab('clock')}
+              >
+                <Text style={[styles.tabText, activeTab === 'clock' && styles.activeTabText]}>
+                  🕐 Relógio
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.pickerContainer}>
-            {activeTab === 'calendar' ? (
-              <CalendarPicker
-                selectedDate={currentDateTime}
-                onDateChange={handleDateChange}
-              />
-            ) : (
-              <ClockPicker
-                selectedTime={currentDateTime}
-                onTimeChange={handleTimeChange}
-              />
-            )}
-          </View>
+            <View style={styles.pickerContainer}>
+              {activeTab === 'calendar' ? (
+                <CalendarPicker
+                  selectedDate={currentDateTime}
+                  onDateChange={handleDateChange}
+                />
+              ) : (
+                <ClockPicker
+                  selectedTime={currentDateTime}
+                  onTimeChange={handleTimeChange}
+                />
+              )}
+            </View>
+          </ScrollView>
 
           <View style={styles.modalActions}>
             <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
@@ -137,7 +143,8 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '95%',
     maxWidth: 400,
-    maxHeight: '90%',
+    maxHeight: '85%',
+    minHeight: 500,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -157,8 +164,8 @@ const styles = StyleSheet.create({
   },
   dateTimeDisplay: {
     alignItems: 'center',
-    marginBottom: 20,
-    padding: 16,
+    marginBottom: 16,
+    padding: 12,
     backgroundColor: '#fff',
     borderRadius: 12,
   },
@@ -169,7 +176,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 16,
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 4,
@@ -192,8 +199,16 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#23272F',
   },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
   pickerContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
+    flex: 1,
+    minHeight: 250,
   },
   modalActions: {
     flexDirection: 'row',
