@@ -1,25 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useUser } from '../contexts/UserContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useReminders } from '../contexts/ReminderContext';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeBackground } from '../components/ThemeBackground';
-import { getApiBaseUrl, testConnection } from '../config/api';
+
+import { vibrationService } from '../services/VibrationService';
+import { backupService } from '../services/BackupService';
+import { alarmService } from '../services/AlarmService';
+import { AlarmTestButton } from '../components/AlarmTestButton';
+import { StopAlarmButton } from '../components/StopAlarmButton';
+
 
 export default function Configuracoes() {
-  const { user, signOut } = useAuth();
   const { theme, themeType, setTheme } = useTheme();
+  const { userData, resetOnboarding } = useUser();
+  const { syncWithServer } = useReminders();
   const { 
     isEnabled: notifications, 
     isLoading: notificationsLoading,
     enableNotifications, 
-    disableNotifications, 
-    sendTestNotification 
+    disableNotifications
   } = useNotifications();
-  const [vibration, setVibration] = useState(true); // Simulação
-  const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'testing' | 'online' | 'offline'>('unknown');
-  const [apiEndpoint, setApiEndpoint] = useState<string>('');
+  const [vibrationEnabled, setVibrationEnabled] = useState(true);
+  const [backupStatus, setBackupStatus] = useState<{
+    lastLocalBackup: string | null;
+    lastServerBackup: string | null;
+    isOnline: boolean;
+  } | null>(null);
+  const [activeAlarmsCount, setActiveAlarmsCount] = useState(0);
 
   // Função para melhorar a visibilidade de textos no modo roxo
   const getTextColor = (baseColor: string, fallbackColor: string = '#1A0B4B') => {
@@ -29,53 +40,78 @@ export default function Configuracoes() {
     return baseColor;
   };
 
-  const handleLogout = async () => {
-    await signOut();
-  };
-
-  const testBackendConnection = async () => {
-    setConnectionStatus('testing');
+  const loadBackupStatus = async () => {
     try {
-      const endpoint = await getApiBaseUrl();
-      setApiEndpoint(endpoint);
-      
-      const isConnected = await testConnection();
-      setConnectionStatus(isConnected ? 'online' : 'offline');
-      
-      Alert.alert(
-        'Teste de Conectividade',
-        isConnected
-          ? `✅ Backend conectado!\nEndpoint: ${endpoint}`
-          : `❌ Backend não acessível\nEndpoint testado: ${endpoint}`,
-        [{ text: 'OK' }]
-      );
+      const status = await backupService.getBackupStatus();
+      setBackupStatus(status);
     } catch (error) {
-      setConnectionStatus('offline');
-      Alert.alert(
-        'Erro de Conectividade',
-        `❌ Erro ao testar conexão:\n${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        [{ text: 'OK' }]
-      );
+      console.error('Erro ao carregar status do backup:', error);
     }
   };
 
-  const getConnectionStatusColor = () => {
-    switch (connectionStatus) {
-      case 'online': return '#4CAF50';
-      case 'offline': return '#F44336';
-      case 'testing': return '#FF9800';
-      default: return theme.text.muted;
+  const handleManualBackup = async () => {
+    try {
+      Alert.alert('Backup Manual', 'Fazendo backup dos seus dados...');
+      await syncWithServer();
+      await loadBackupStatus();
+      Alert.alert('Sucesso', 'Backup realizado com sucesso!');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível fazer o backup. Verifique sua conexão.');
     }
   };
 
-  const getConnectionStatusText = () => {
-    switch (connectionStatus) {
-      case 'online': return '🟢 Online';
-      case 'offline': return '🔴 Offline';
-      case 'testing': return '🟡 Testando...';
-      default: return '⚪ Desconhecido';
+  const handleRestoreBackup = async () => {
+    Alert.alert(
+      'Restaurar Backup',
+      'Isso irá sobrescrever seus dados locais com os dados do servidor. Deseja continuar?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Restaurar', 
+          onPress: async () => {
+            try {
+              const restored = await backupService.restoreFromServer();
+              if (restored) {
+                Alert.alert('Sucesso', 'Dados restaurados do servidor!');
+                // Recarregar dados
+                window.location.reload();
+              } else {
+                Alert.alert('Aviso', 'Nenhum backup encontrado no servidor.');
+              }
+            } catch (error) {
+              Alert.alert('Erro', 'Não foi possível restaurar o backup.');
     }
+          }
+        }
+      ]
+    );
   };
+
+  const handleClearAllData = async () => {
+    Alert.alert(
+      'Limpar Todos os Dados',
+      'Isso irá apagar TODOS os seus dados (lembretes, configurações, etc.) tanto localmente quanto no servidor. Esta ação não pode ser desfeita. Deseja continuar?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Limpar Tudo', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await backupService.clearAllData();
+              Alert.alert('Sucesso', 'Todos os dados foram limpos. O app será reiniciado.');
+              // Recarregar app
+              window.location.reload();
+            } catch (error) {
+              Alert.alert('Erro', 'Não foi possível limpar todos os dados.');
+    }
+          }
+        }
+      ]
+    );
+  };
+
+
 
   const handleNotificationsChange = async () => {
     if (notifications) {
@@ -85,9 +121,54 @@ export default function Configuracoes() {
     }
   };
 
-  const handleVibrationChange = () => {
-    setVibration((prev) => !prev);
-    Alert.alert('Vibração', `Vibração ${!vibration ? 'ativada' : 'desativada'}! (simulação)`);
+  const handleResetOnboarding = async () => {
+    Alert.alert(
+      'Refazer Onboarding',
+      'Isso irá limpar seus dados pessoais e você precisará preencher novamente. Deseja continuar?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Confirmar', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await resetOnboarding();
+              Alert.alert('Sucesso', 'Onboarding resetado. O app será reiniciado.');
+            } catch (error) {
+              Alert.alert('Erro', 'Não foi possível resetar o onboarding.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  useEffect(() => {
+    loadVibrationSettings();
+    loadBackupStatus();
+    loadAlarmStatus();
+  }, []);
+
+  const loadAlarmStatus = () => {
+    const count = alarmService.getActiveAlarmsCount();
+    setActiveAlarmsCount(count);
+  };
+
+  const loadVibrationSettings = async () => {
+    const settings = await vibrationService.getSettings();
+    setVibrationEnabled(settings.enabled);
+  };
+
+  const handleVibrationChange = async () => {
+    const newEnabled = !vibrationEnabled;
+    await vibrationService.setEnabled(newEnabled);
+    setVibrationEnabled(newEnabled);
+    
+    if (newEnabled) {
+      await vibrationService.vibrate('success');
+    }
+    
+    Alert.alert('Vibração', `Vibração ${newEnabled ? 'ativada' : 'desativada'}!`);
   };
 
   return (
@@ -177,82 +258,127 @@ export default function Configuracoes() {
         </View>
         <View style={styles.row}>
           <Text style={[styles.label, { color: theme.text.primary }]}>Vibração</Text>
-          <Switch value={vibration} onValueChange={handleVibrationChange} />
+          <Switch value={vibrationEnabled} onValueChange={handleVibrationChange} />
         </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Notificações</Text>
-        <TouchableOpacity 
-          style={[styles.testButton, { backgroundColor: theme.action.primary }]} 
-          onPress={sendTestNotification}
-          disabled={!notifications || notificationsLoading}
-        >
-          <Ionicons name="notifications" size={20} color="#fff" />
-          <Text style={styles.testButtonText}>Enviar Notificação de Teste</Text>
-        </TouchableOpacity>
-        <Text style={[styles.helpText, { color: getTextColor(theme.text.muted, '#4C1D95') }]}>
-          Teste se as notificações estão funcionando corretamente
-        </Text>
-      </View>
-
-      {/* Seção de Diagnóstico */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Diagnóstico do Sistema</Text>
         
         <View style={styles.row}>
-          <Text style={[styles.label, { color: theme.text.primary }]}>
-            Status do Backend
+          <Text style={[styles.label, { color: theme.text.primary }]}>Alarmes Ativos</Text>
+          <Text style={[styles.statusText, { color: theme.action.primary }]}>
+            {activeAlarmsCount} alarme{activeAlarmsCount !== 1 ? 's' : ''}
           </Text>
-          <Text style={[styles.statusText, { color: getConnectionStatusColor() }]}>
-            {getConnectionStatusText()}
+        </View>
+        
+        <View style={styles.row}>
+          <Text style={[styles.label, { color: theme.text.primary }]}>Som do Alarme</Text>
+          <Text style={[styles.statusText, { color: theme.action.primary }]}>
+            Alarme Melhorado (35s)
           </Text>
         </View>
 
-        {apiEndpoint && (
+
+        
+        <AlarmTestButton title="Testar Sistema de Alarme" />
+        <StopAlarmButton />
+      </View>
+
+      {/* Seção de Dados do Usuário */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Seus Dados</Text>
+        
+        {userData && (
+          <>
+            <View style={styles.row}>
+              <Text style={[styles.label, { color: theme.text.primary }]}>Nome</Text>
+              <Text style={[styles.userDataText, { color: theme.text.secondary }]}>
+                {userData.name}
+              </Text>
+            </View>
           <View style={styles.row}>
-            <Text style={[styles.label, { color: theme.text.primary }]}>
-              Endpoint
+              <Text style={[styles.label, { color: theme.text.primary }]}>Idade</Text>
+              <Text style={[styles.userDataText, { color: theme.text.secondary }]}>
+                {userData.age} anos
             </Text>
-            <Text style={[styles.endpointText, { color: theme.text.secondary }]} numberOfLines={1}>
-              {apiEndpoint}
+            </View>
+            <View style={styles.row}>
+              <Text style={[styles.label, { color: theme.text.primary }]}>Gênero</Text>
+              <Text style={[styles.userDataText, { color: theme.text.secondary }]}>
+                {userData.gender === 'masculino' ? 'Masculino' : 
+                 userData.gender === 'feminino' ? 'Feminino' : 'Outro'}
             </Text>
           </View>
+          </>
         )}
 
         <TouchableOpacity
-          style={[styles.testButton, { backgroundColor: theme.action.primary }]}
-          onPress={testBackendConnection}
-          disabled={connectionStatus === 'testing'}
+          style={[styles.resetButton, { backgroundColor: theme.action.logout }]}
+          onPress={handleResetOnboarding}
         >
-          <Ionicons name="wifi" size={20} color="#fff" />
-          <Text style={styles.testButtonText}>
-            {connectionStatus === 'testing' ? 'Testando...' : 'Testar Conectividade'}
-          </Text>
+          <Ionicons name="refresh" size={20} color="#fff" />
+          <Text style={styles.resetButtonText}>Refazer Onboarding</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.helpText, { color: getTextColor(theme.text.muted, '#4C1D95') }]}>
-          Teste a conexão com o backend para diagnosticar problemas de sincronização.
+        <Text style={[styles.resetHelpText, { color: getTextColor(theme.text.muted, '#4C1D95') }]}>
+          Isso irá limpar seus dados pessoais e você precisará preencher novamente.
         </Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Sua Conta</Text>
-        <View style={styles.userInfoContainer}>
-          <Text style={[styles.userInfo, { color: theme.text.primary }]}>Nome: {user?.name}</Text>
-          <Text style={[styles.userInfo, { color: theme.text.primary }]}>E-mail: {user?.email}</Text>
-        </View>
-      </View>
 
-      <TouchableOpacity style={[styles.logoutButton, { backgroundColor: theme.action.logout }]} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Sair da Conta</Text>
-      </TouchableOpacity>
+
+      {/* Seção de Backup */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Backup e Sincronização</Text>
+        <View style={styles.row}>
+          <Text style={[styles.label, { color: theme.text.primary }]}>
+            Status do Servidor
+          </Text>
+          <Text style={[styles.statusText, { color: backupStatus?.isOnline ? '#4CAF50' : '#F44336' }]}>
+            {backupStatus?.isOnline ? '✅ Online' : '❌ Offline'}
+          </Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={[styles.label, { color: theme.text.primary }]}>
+            Último Backup Local
+          </Text>
+          <Text style={[styles.userDataText, { color: theme.text.secondary }]}>
+            {backupStatus?.lastLocalBackup ? new Date(backupStatus.lastLocalBackup).toLocaleDateString() : 'Nunca'}
+          </Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={[styles.label, { color: theme.text.primary }]}>
+            Último Backup do Servidor
+          </Text>
+          <Text style={[styles.userDataText, { color: theme.text.secondary }]}>
+            {backupStatus?.lastServerBackup ? new Date(backupStatus.lastServerBackup).toLocaleDateString() : 'Nunca'}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.backupButton, { backgroundColor: theme.action.primary }]}
+          onPress={handleManualBackup}
+        >
+          <Ionicons name="cloud-upload" size={20} color="#fff" />
+          <Text style={styles.backupButtonText}>Fazer Backup Manual</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.restoreButton, { backgroundColor: theme.action.primary }]}
+          onPress={handleRestoreBackup}
+        >
+          <Ionicons name="cloud-download" size={20} color="#fff" />
+          <Text style={styles.restoreButtonText}>Restaurar Backup</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.clearAllDataButton, { backgroundColor: theme.action.logout }]}
+          onPress={handleClearAllData}
+        >
+          <Ionicons name="trash" size={20} color="#fff" />
+          <Text style={styles.clearAllDataButtonText}>Limpar Todos os Dados</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Sobre o App</Text>
         <View style={styles.aboutContainer}>
-          <Text style={[styles.aboutText, { color: getTextColor(theme.text.muted, '#4C1D95') }]}>TDAH Service v1.0</Text>
-          <Text style={[styles.aboutText, { color: getTextColor(theme.text.muted, '#4C1D95') }]}>Desenvolvido por Você</Text>
+          <Text style={[styles.aboutText, { color: getTextColor(theme.text.muted, '#4C1D95') }]}>TDAH Service v2.0</Text>
+          <Text style={[styles.aboutText, { color: getTextColor(theme.text.muted, '#4C1D95') }]}>Desenvolvido por Pabllo</Text>
         </View>
       </View>
       
@@ -273,7 +399,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 32,
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 40,
   },
   section: {
     marginBottom: 40,
@@ -343,34 +469,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   bottomSpacing: {
-    height: 40,
+    height: 60,
   },
-  testButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 18,
-    borderRadius: 16,
-    marginBottom: 16,
-    gap: 10,
-    elevation: 2,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  testButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  helpText: {
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 18,
-    paddingHorizontal: 16,
-    marginTop: 8,
-  },
+
+
   themeContainer: {
     marginBottom: 24,
   },
@@ -402,13 +504,98 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 10,
   },
+
+
   statusText: {
     fontSize: 14,
     fontWeight: '600',
   },
-  endpointText: {
-    fontSize: 12,
-    flex: 1,
-    textAlign: 'right',
+  userDataText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  resetButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 18,
+    borderRadius: 16,
+    marginTop: 20,
+    gap: 10,
+    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+  },
+  resetButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  resetHelpText: {
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 16,
+    marginTop: 8,
+  },
+
+  backupButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 18,
+    borderRadius: 16,
+    marginTop: 20,
+    gap: 10,
+    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+  },
+  backupButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  restoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 18,
+    borderRadius: 16,
+    marginTop: 10,
+    gap: 10,
+    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+  },
+  restoreButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  clearAllDataButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 18,
+    borderRadius: 16,
+    marginTop: 10,
+    gap: 10,
+    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+  },
+  clearAllDataButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

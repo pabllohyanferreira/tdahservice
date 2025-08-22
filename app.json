@@ -8,29 +8,53 @@
     "splash": {
       "image": "./assets/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#7B3FF2"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.tdahservice"
     },
     "android": {
+      "package": "com.yourcompany.tdahservice",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#7B3FF2"
       },
       "permissions": [
         "NOTIFICATIONS",
         "VIBRATE",
-        "WAKE_LOCK"
+        "WAKE_LOCK",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "tdahservice"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ]
     },
     "web": {
       "favicon": "./assets/logo.png"
     },
     "scheme": "tdahservice",
+    "plugins": [
+      "expo-notifications"
+    ],
+    "owner": "layerzao",
     "extra": {
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "46c8417c-df1f-4220-a1bf-b7aac87f1f57"
       }
     }
   }

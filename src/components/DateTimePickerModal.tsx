@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from 'react-native';
-import { darkColors } from '../theme/colors';
 import { CalendarPicker } from './CalendarPicker';
 import { ClockPicker } from './ClockPicker';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface DateTimePickerModalProps {
   visible: boolean;
@@ -17,6 +17,7 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
   onDateTimeChange,
   onClose,
 }) => {
+  const { theme } = useTheme();
   const [currentDateTime, setCurrentDateTime] = useState(selectedDateTime);
   const [activeTab, setActiveTab] = useState<'calendar' | 'clock'>('calendar');
 
@@ -63,11 +64,11 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
       onRequestClose={handleCancel}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+        <View style={[styles.modalContent, { backgroundColor: theme.background.card }]}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Selecionar Data e Hora</Text>
+            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>Selecionar Data e Hora</Text>
             <TouchableOpacity onPress={handleCancel}>
-              <Text style={styles.closeButton}>✕</Text>
+              <Text style={[styles.closeButton, { color: theme.text.secondary }]}>✕</Text>
             </TouchableOpacity>
           </View>
 
@@ -76,25 +77,39 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            <View style={styles.dateTimeDisplay}>
-              <Text style={styles.dateTimeText}>{formatDateTime(currentDateTime)}</Text>
+            <View style={[styles.dateTimeDisplay, { backgroundColor: theme.background.primary }]}>
+              <Text style={[styles.dateTimeText, { color: theme.text.primary }]}>{formatDateTime(currentDateTime)}</Text>
             </View>
 
-            <View style={styles.tabContainer}>
+            <View style={[styles.tabContainer, { backgroundColor: theme.background.primary }]}>
               <TouchableOpacity
-                style={[styles.tab, activeTab === 'calendar' && styles.activeTab]}
+                style={[
+                  styles.tab, 
+                  activeTab === 'calendar' && [styles.activeTab, { backgroundColor: theme.action.primary }]
+                ]}
                 onPress={() => setActiveTab('calendar')}
               >
-                <Text style={[styles.tabText, activeTab === 'calendar' && styles.activeTabText]}>
+                <Text style={[
+                  styles.tabText, 
+                  { color: theme.text.secondary },
+                  activeTab === 'calendar' && [styles.activeTabText, { color: theme.text.primary }]
+                ]}>
                   📅 Calendário
                 </Text>
               </TouchableOpacity>
               
               <TouchableOpacity
-                style={[styles.tab, activeTab === 'clock' && styles.activeTab]}
+                style={[
+                  styles.tab, 
+                  activeTab === 'clock' && [styles.activeTab, { backgroundColor: theme.action.primary }]
+                ]}
                 onPress={() => setActiveTab('clock')}
               >
-                <Text style={[styles.tabText, activeTab === 'clock' && styles.activeTabText]}>
+                <Text style={[
+                  styles.tabText, 
+                  { color: theme.text.secondary },
+                  activeTab === 'clock' && [styles.activeTabText, { color: theme.text.primary }]
+                ]}>
                   🕐 Relógio
                 </Text>
               </TouchableOpacity>
@@ -116,12 +131,18 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
           </ScrollView>
 
           <View style={styles.modalActions}>
-            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            <TouchableOpacity 
+              style={[styles.cancelButton, { backgroundColor: theme.background.primary }]} 
+              onPress={handleCancel}
+            >
+              <Text style={[styles.cancelButtonText, { color: theme.text.primary }]}>Cancelar</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-              <Text style={styles.confirmButtonText}>Confirmar</Text>
+            <TouchableOpacity 
+              style={[styles.confirmButton, { backgroundColor: theme.action.primary }]} 
+              onPress={handleConfirm}
+            >
+              <Text style={[styles.confirmButtonText, { color: '#fff' }]}>Confirmar</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -138,13 +159,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 24,
+    padding: 20,
     width: '95%',
-    maxWidth: 400,
-    maxHeight: '85%',
-    minHeight: 500,
+    maxWidth: 450,
+    maxHeight: '90%',
+    minHeight: 650,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -153,31 +173,26 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#23272F',
   },
   closeButton: {
     fontSize: 24,
-    color: '#B0B0B0',
     fontWeight: 'bold',
   },
   dateTimeDisplay: {
     alignItems: 'center',
     marginBottom: 16,
-    padding: 12,
-    backgroundColor: '#fff',
+    padding: 16,
     borderRadius: 12,
   },
   dateTimeText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#23272F',
   },
   tabContainer: {
     flexDirection: 'row',
     marginBottom: 16,
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 4,
   },
@@ -189,15 +204,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   activeTab: {
-    backgroundColor: '#5e4bfe',
+    // Cor será aplicada dinamicamente
   },
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#888',
   },
   activeTabText: {
-    color: '#23272F',
+    // Cor será aplicada dinamicamente
   },
   scrollContainer: {
     flex: 1,
@@ -208,7 +222,7 @@ const styles = StyleSheet.create({
   pickerContainer: {
     marginBottom: 16,
     flex: 1,
-    minHeight: 250,
+    minHeight: 350,
   },
   modalActions: {
     flexDirection: 'row',
@@ -219,11 +233,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: '#e0e0e0',
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#23272F',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -231,11 +243,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: '#4caf50',
     alignItems: 'center',
   },
   confirmButtonText: {
-    color: '#23272F',
     fontSize: 16,
     fontWeight: 'bold',
   },

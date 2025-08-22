@@ -1,8 +1,10 @@
 // Configuração da API do backend
 const POSSIBLE_ENDPOINTS = [
+  // URL de produção (backend deployado)
+  'https://tdah-service-backend.onrender.com/api',
+  // URLs de desenvolvimento (apenas para testes)
   'http://localhost:3000/api',
   'http://192.168.1.84:3000/api',
-  // Remover IPs hardcoded específicos
   'http://10.0.2.2:3000/api', // Android Emulator
 ];
 
@@ -25,8 +27,6 @@ const detectAvailableEndpoint = async (): Promise<string> => {
 
   for (const endpoint of POSSIBLE_ENDPOINTS) {
     try {
-      console.log(`🔍 Testando endpoint: ${endpoint}`);
-      
       // Implementar timeout com AbortController
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -39,18 +39,15 @@ const detectAvailableEndpoint = async (): Promise<string> => {
       clearTimeout(timeoutId);
       
       if (response.ok) {
-        console.log(`✅ Endpoint disponível: ${endpoint}`);
         detectedEndpoint = endpoint;
         return endpoint;
       }
     } catch (error) {
-      console.log(`❌ Endpoint indisponível: ${endpoint}`);
       continue;
     }
   }
   
   // Fallback para localhost se nenhum funcionar
-  console.log('⚠️ Nenhum endpoint detectado, usando localhost como fallback');
   detectedEndpoint = POSSIBLE_ENDPOINTS[0];
   return detectedEndpoint;
 };
@@ -112,21 +109,21 @@ export const apiRequest = async (
   options: RequestInit = {}
 ) => {
   try {
-    const baseUrl = await getApiBaseUrl();
-    const url = `${baseUrl}${endpoint}`;
-    
+  const baseUrl = await getApiBaseUrl();
+  const url = `${baseUrl}${endpoint}`;
+  
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
     
     const response = await fetch(url, {
-      ...options,
+    ...options,
       signal: controller.signal,
-      headers: {
-        ...API_CONFIG.DEFAULT_HEADERS,
-        ...options.headers,
-      },
+    headers: {
+      ...API_CONFIG.DEFAULT_HEADERS,
+      ...options.headers,
+    },
     });
-    
+  
     clearTimeout(timeoutId);
     
     if (!response.ok) {
@@ -165,7 +162,6 @@ export const testConnection = async (): Promise<boolean> => {
     clearTimeout(timeoutId);
     return response.ok;
   } catch (error) {
-    console.error('❌ Teste de conectividade falhou:', error);
     return false;
   }
 };

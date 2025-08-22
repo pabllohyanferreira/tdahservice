@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert } from 'react-native';
-import { darkColors } from '../theme/colors';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ClockPickerProps {
   selectedTime: Date;
@@ -11,6 +11,7 @@ export const ClockPicker: React.FC<ClockPickerProps> = ({
   selectedTime,
   onTimeChange,
 }) => {
+  const { theme } = useTheme();
   const [hours, setHours] = useState(selectedTime.getHours().toString().padStart(2, '0'));
   const [minutes, setMinutes] = useState(selectedTime.getMinutes().toString().padStart(2, '0'));
 
@@ -117,105 +118,135 @@ export const ClockPicker: React.FC<ClockPickerProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background.card }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Selecionar Hora</Text>
-        <TouchableOpacity style={styles.nowButton} onPress={setCurrentTime}>
-          <Text style={styles.nowButtonText}>Agora</Text>
+        <Text style={[styles.title, { color: theme.text.primary }]}>Selecionar Hora</Text>
+        <TouchableOpacity 
+          style={[styles.nowButton, { backgroundColor: theme.action.primary }]} 
+          onPress={setCurrentTime}
+        >
+          <Text style={[styles.nowButtonText, { color: '#fff' }]}>Agora</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.timeDisplay}>
-        <Text style={styles.timeText}>{formatTime(selectedTime)}</Text>
-      </View>
+
 
       <View style={styles.timeInputContainer}>
         {/* Seletor de Horas */}
         <View style={styles.timeSelector}>
-          <TouchableOpacity style={styles.arrowButton} onPress={incrementHours}>
-            <Text style={styles.arrowText}>▲</Text>
+          <TouchableOpacity 
+            style={[styles.arrowButton, { backgroundColor: theme.background.primary }]} 
+            onPress={incrementHours}
+          >
+            <Text style={[styles.arrowText, { color: theme.action.primary }]}>▲</Text>
           </TouchableOpacity>
           
           <View style={styles.inputContainer}>
             <TextInput
-              style={styles.timeInput}
+              style={[styles.timeInput, { 
+                backgroundColor: theme.background.primary, 
+                color: theme.text.primary,
+                borderColor: theme.input.border
+              }]}
               value={hours}
               onChangeText={handleHoursChange}
               keyboardType="numeric"
               maxLength={2}
               placeholder="00"
-              placeholderTextColor="#888"
+              placeholderTextColor={theme.text.placeholder}
               textAlign="center"
             />
-            <Text style={styles.timeLabel}>Horas</Text>
+            <Text style={[styles.timeLabel, { color: theme.text.secondary }]}>Horas</Text>
           </View>
           
-          <TouchableOpacity style={styles.arrowButton} onPress={decrementHours}>
-            <Text style={styles.arrowText}>▼</Text>
+          <TouchableOpacity 
+            style={[styles.arrowButton, { backgroundColor: theme.background.primary }]} 
+            onPress={decrementHours}
+          >
+            <Text style={[styles.arrowText, { color: theme.action.primary }]}>▼</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.separator}>:</Text>
+        <Text style={[styles.separator, { color: theme.text.primary }]}>:</Text>
 
         {/* Seletor de Minutos */}
         <View style={styles.timeSelector}>
-          <TouchableOpacity style={styles.arrowButton} onPress={incrementMinutes}>
-            <Text style={styles.arrowText}>▲</Text>
+          <TouchableOpacity 
+            style={[styles.arrowButton, { backgroundColor: theme.background.primary }]} 
+            onPress={incrementMinutes}
+          >
+            <Text style={[styles.arrowText, { color: theme.action.primary }]}>▲</Text>
           </TouchableOpacity>
           
           <View style={styles.inputContainer}>
             <TextInput
-              style={styles.timeInput}
+              style={[styles.timeInput, { 
+                backgroundColor: theme.background.primary, 
+                color: theme.text.primary,
+                borderColor: theme.input.border
+              }]}
               value={minutes}
               onChangeText={handleMinutesChange}
               keyboardType="numeric"
               maxLength={2}
               placeholder="00"
-              placeholderTextColor="#888"
+              placeholderTextColor={theme.text.placeholder}
               textAlign="center"
             />
-            <Text style={styles.timeLabel}>Minutos</Text>
+            <Text style={[styles.timeLabel, { color: theme.text.secondary }]}>Minutos</Text>
           </View>
           
-          <TouchableOpacity style={styles.arrowButton} onPress={decrementMinutes}>
-            <Text style={styles.arrowText}>▼</Text>
+          <TouchableOpacity 
+            style={[styles.arrowButton, { backgroundColor: theme.background.primary }]} 
+            onPress={decrementMinutes}
+          >
+            <Text style={[styles.arrowText, { color: theme.action.primary }]}>▼</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <View style={styles.quickTimeButtons}>
-        <TouchableOpacity 
-          style={styles.quickButton} 
-          onPress={() => {
-            setHours('08');
-            setMinutes('00');
-            updateTime('08', '00');
-          }}
-        >
-          <Text style={styles.quickButtonText}>08:00</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.quickButton} 
-          onPress={() => {
-            setHours('12');
-            setMinutes('00');
-            updateTime('12', '00');
-          }}
-        >
-          <Text style={styles.quickButtonText}>12:00</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.quickButton} 
-          onPress={() => {
-            setHours('18');
-            setMinutes('00');
-            updateTime('18', '00');
-          }}
-        >
-          <Text style={styles.quickButtonText}>18:00</Text>
-        </TouchableOpacity>
+                  <TouchableOpacity 
+            style={[styles.quickButton, { 
+              backgroundColor: theme.background.primary,
+              borderColor: theme.input.border
+            }]} 
+            onPress={() => {
+              setHours('08');
+              setMinutes('00');
+              updateTime('08', '00');
+            }}
+          >
+            <Text style={[styles.quickButtonText, { color: theme.text.primary }]}>08:00</Text>
+          </TouchableOpacity>
+          
+                      <TouchableOpacity 
+              style={[styles.quickButton, { 
+                backgroundColor: theme.background.primary,
+                borderColor: theme.input.border
+              }]} 
+              onPress={() => {
+                setHours('12');
+                setMinutes('00');
+                updateTime('12', '00');
+              }}
+            >
+            <Text style={[styles.quickButtonText, { color: theme.text.primary }]}>12:00</Text>
+          </TouchableOpacity>
+          
+                      <TouchableOpacity 
+              style={[styles.quickButton, { 
+                backgroundColor: theme.background.primary,
+                borderColor: theme.input.border
+              }]} 
+              onPress={() => {
+                setHours('18');
+                setMinutes('00');
+                updateTime('18', '00');
+              }}
+            >
+            <Text style={[styles.quickButtonText, { color: theme.text.primary }]}>18:00</Text>
+          </TouchableOpacity>
       </View>
     </View>
   );
@@ -223,12 +254,11 @@ export const ClockPicker: React.FC<ClockPickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 12,
+    padding: 16,
     marginBottom: 16,
     alignItems: 'center',
-    maxHeight: 240,
+    minHeight: 280,
   },
   header: {
     flexDirection: 'row',
@@ -240,95 +270,80 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#23272F',
   },
   nowButton: {
-    backgroundColor: '#5e4bfe',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
   nowButtonText: {
-    color: '#23272F',
     fontSize: 12,
     fontWeight: '600',
   },
-  timeDisplay: {
-    marginBottom: 16,
-  },
-  timeText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#23272F',
-  },
+
   timeInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    paddingHorizontal: 10,
   },
   timeSelector: {
     alignItems: 'center',
+    minWidth: 80,
   },
   arrowButton: {
-    width: 40,
-    height: 30,
+    width: 44,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 8,
-    marginVertical: 4,
+    marginVertical: 6,
   },
   arrowText: {
     fontSize: 16,
-    color: '#5e4bfe',
     fontWeight: 'bold',
   },
   inputContainer: {
     alignItems: 'center',
-    marginVertical: 8,
+    marginVertical: 10,
+    minHeight: 80,
   },
   timeInput: {
-    width: 60,
-    height: 50,
-    backgroundColor: '#fff',
+    width: 70,
+    height: 56,
     borderRadius: 12,
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#23272F',
     textAlign: 'center',
     borderWidth: 2,
-    borderColor: '#B0B0B0',
   },
   timeLabel: {
     fontSize: 12,
-    color: '#888',
     marginTop: 4,
     fontWeight: '600',
   },
   separator: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 'bold',
-    color: '#23272F',
-    marginHorizontal: 16,
+    marginHorizontal: 20,
   },
   quickTimeButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
     flexWrap: 'wrap',
     justifyContent: 'center',
+    paddingHorizontal: 10,
   },
   quickButton: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#B0B0B0',
+    minWidth: 80,
   },
   quickButtonText: {
     fontSize: 14,
-    color: '#23272F',
     fontWeight: '600',
   },
 }); 

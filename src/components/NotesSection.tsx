@@ -140,7 +140,7 @@ export const NotesSection: React.FC<NotesSectionProps> = ({ isVisible }) => {
   if (!isVisible) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background.primary }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: theme.text.primary }]}>
           📝 Bloco de Notas
@@ -156,7 +156,11 @@ export const NotesSection: React.FC<NotesSectionProps> = ({ isVisible }) => {
       {isAddingNote && (
         <View style={[styles.noteForm, { backgroundColor: theme.background.card }]}>
           <TextInput
-            style={[styles.titleInput, { color: theme.text.primary, borderColor: theme.text.muted }]}
+            style={[styles.titleInput, { 
+              color: theme.text.primary, 
+              borderColor: theme.text.muted,
+              backgroundColor: theme.background.input
+            }]}
             placeholder="Título da nota"
             placeholderTextColor={theme.text.placeholder}
             value={newNoteTitle}
@@ -164,7 +168,11 @@ export const NotesSection: React.FC<NotesSectionProps> = ({ isVisible }) => {
             maxLength={50}
           />
                      <TextInput
-             style={[styles.contentInput, { color: theme.text.primary, borderColor: theme.text.muted }]}
+             style={[styles.contentInput, { 
+               color: theme.text.primary, 
+               borderColor: theme.text.muted,
+               backgroundColor: theme.background.input
+             }]}
              placeholder="Conteúdo da nota..."
              placeholderTextColor={theme.text.placeholder}
              value={newNoteContent}

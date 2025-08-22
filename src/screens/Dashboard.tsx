@@ -1,30 +1,68 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  ScrollView, 
+  Animated, 
+  Dimensions,
+  SafeAreaView
+} from 'react-native';
 import { useReminders } from '../contexts/ReminderContext';
+import { useUser } from '../contexts/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
-import { NotificationManager } from '../components/NotificationManager';
-import { ThemeBackground } from '../components/ThemeBackground';
-
 
 const { width } = Dimensions.get('window');
 
-export default function Dashboard({ navigation }: any) {
-  const { user, signOut } = useAuth();
+interface DashboardProps {
+  navigation: any;
+}
+
+export default function Dashboard({ navigation }: DashboardProps) {
   const { reminders } = useReminders();
-  const { theme, themeType } = useTheme();
+  const { userData } = useUser();
+  const { theme } = useTheme();
   
   // Animações
   const fadeAnim = useState(new Animated.Value(0))[0];
   const slideAnim = useState(new Animated.Value(50))[0];
   
-
-  
   // Estatísticas calculadas
   const completedTasks = reminders.filter(r => r.isCompleted).length;
   const pendingTasks = reminders.filter(r => !r.isCompleted).length;
   const totalTasks = reminders.length;
+
+  // Função para extrair primeiro e segundo nome
+  const getFirstAndSecondName = (fullName: string): string => {
+    if (!fullName || typeof fullName !== 'string') {
+      return 'Bem-vindo';
+    }
+    
+    // Remove espaços extras e divide por espaços
+    const trimmedName = fullName.trim();
+    const nameParts = trimmedName.split(' ').filter(part => part.length > 0);
+    
+    // Se tem apenas um nome, retorna ele
+    if (nameParts.length === 1) {
+      const firstName = nameParts[0];
+      return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+    }
+    
+    // Se tem dois ou mais nomes, retorna primeiro + segundo
+    if (nameParts.length >= 2) {
+      const firstName = nameParts[0];
+      const secondName = nameParts[1];
+      
+      const formattedFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+      const formattedSecondName = secondName.charAt(0).toUpperCase() + secondName.slice(1).toLowerCase();
+      
+      return `${formattedFirstName} ${formattedSecondName}`;
+    }
+    
+    return 'Bem-vindo';
+  };
 
   useEffect(() => {
     // Animação de entrada
@@ -41,21 +79,6 @@ export default function Dashboard({ navigation }: any) {
       }),
     ]).start();
   }, []);
-
-  // Verificação de segurança para evitar erro caso theme esteja indefinido
-  if (!user) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.background.primary }]}>
-        <Text style={[styles.errorText, { color: theme.text.primary }]}>
-          Erro: usuário não carregado.
-        </Text>
-      </View>
-    );
-  }
-
-  const handleLogout = async () => {
-    await signOut();
-  };
 
   const handleGoToSettings = () => {
     navigation.navigate('Configuracoes');
@@ -93,10 +116,11 @@ export default function Dashboard({ navigation }: any) {
   };
 
   return (
-    <ThemeBackground>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background.primary }]}>
       <ScrollView 
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', paddingTop: 40 }}
       >
       <Animated.View 
         style={[
@@ -113,7 +137,7 @@ export default function Dashboard({ navigation }: any) {
               {getGreeting()},
             </Text>
             <Text style={[styles.title, { color: theme.text.primary }]}>
-              {user?.name}!
+                {getFirstAndSecondName(userData?.name || '')}!
             </Text>
           </View>
           <View style={styles.headerActions}>
@@ -124,14 +148,6 @@ export default function Dashboard({ navigation }: any) {
               accessibilityHint="Abre as configurações do app"
             >
               <Ionicons name="settings-sharp" size={24} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.logoutButton, { backgroundColor: theme.action.logout }]} 
-              onPress={handleLogout}
-              accessibilityLabel="Sair da conta"
-              accessibilityHint="Faz logout da conta atual"
-            >
-              <Ionicons name="log-out-outline" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -151,8 +167,6 @@ export default function Dashboard({ navigation }: any) {
             {getMotivationalMessage()}
         </Text>
         </View>
-        
-        <NotificationManager />
         
         <View style={styles.statsContainer}>
           <View style={[styles.statCard, { backgroundColor: theme.background.card }]}>
@@ -192,11 +206,9 @@ export default function Dashboard({ navigation }: any) {
           </View>
         </View>
 
-
-
         <View style={styles.menuContainer}>
           <TouchableOpacity 
-            style={[styles.menuButton, { backgroundColor: theme.action.primary }]} 
+              style={[styles.menuButton, { backgroundColor: '#4A90E2' }]} 
             onPress={() => navigation.navigate('AlarmesLembretes')}
             accessibilityLabel="Gerenciar lembretes"
             accessibilityHint="Abre a tela de alarmes e lembretes"
@@ -209,7 +221,7 @@ export default function Dashboard({ navigation }: any) {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[styles.menuButton, { backgroundColor: theme.action.primary }]} 
+              style={[styles.menuButton, { backgroundColor: '#1ABC9C' }]} 
             onPress={() => navigation.navigate('Calendario')}
             accessibilityLabel="Calendário"
             accessibilityHint="Abre a visualização do calendário"
@@ -221,38 +233,42 @@ export default function Dashboard({ navigation }: any) {
             <Ionicons name="chevron-forward" size={20} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.menuButton, { backgroundColor: theme.action.primary }]} 
-            onPress={() => navigation.navigate('Notas')}
-            accessibilityLabel="Bloco de Notas"
-            accessibilityHint="Abre o bloco de notas"
-          >
-            <View style={styles.menuButtonContent}>
-              <Ionicons name="document-text" size={24} color="#fff" />
-              <Text style={styles.menuButtonText}>Bloco de Notas</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#fff" />
-          </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.menuButton, { backgroundColor: theme.action.primary }]} 
+              onPress={() => navigation.navigate('Notas')}
+              accessibilityLabel="Bloco de Notas"
+              accessibilityHint="Abre o bloco de notas"
+            >
+              <View style={styles.menuButtonContent}>
+                <Ionicons name="document-text" size={24} color="#fff" />
+                <Text style={styles.menuButtonText}>Bloco de Notas</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#fff" />
+            </TouchableOpacity>
         </View>
       </Animated.View>
       </ScrollView>
-    </ThemeBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#23272F' 
   },
   header: { 
     padding: 20, 
-    paddingTop: 60 
+    paddingTop: 60,
+    alignItems: 'center',
+    marginBottom: 20,
   },
   headerContent: {
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center',
+    width: '100%',
+    maxWidth: 400,
+    paddingHorizontal: 10,
   },
   headerActions: {
     flexDirection: 'row',
@@ -277,6 +293,7 @@ const styles = StyleSheet.create({
     fontSize: 28, 
     fontWeight: 'bold',
     lineHeight: 32,
+    textAlign: 'left',
   },
   logoutButton: { 
     padding: 12, 
@@ -288,7 +305,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   content: { 
-    padding: 20 
+    padding: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+    alignItems: 'center',
   },
   subtitle: { 
     fontSize: 20, 
@@ -300,8 +320,10 @@ const styles = StyleSheet.create({
   statsContainer: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    marginBottom: 32,
+    marginBottom: 40,
     gap: 12,
+    width: '100%',
+    maxWidth: 400,
   },
   statCard: { 
     padding: 20, 
@@ -327,9 +349,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-
   menuContainer: { 
-    gap: 16 
+    gap: 16,
+    width: '100%',
+    maxWidth: 400,
+    marginBottom: 50,
   },
   menuButton: { 
     padding: 20, 
@@ -356,11 +380,12 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 18,
     textAlign: 'center',
+    padding: 20,
   },
   motivationalContainer: {
     padding: 15,
     borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 20,
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 1, height: 1 },
@@ -368,6 +393,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
+    maxWidth: 400,
   },
-
 }); 

@@ -28,7 +28,7 @@ import { useToast } from '../contexts/ToastContext';
 export default function AlarmesLembretes({ navigation }: any) {
   // Adicionar esta linha junto com os outros hooks
   const { showToast } = useToast();
-  const { reminders, addReminder, updateReminder, deleteReminder, isLoading, toggleReminder } = useReminders();
+  const { reminders, addReminder, updateReminder, deleteReminder, isLoading, toggleComplete } = useReminders();
   const { theme } = useTheme();
   const [showModal, setShowModal] = useState(false);
   const [showDateTimePicker, setShowDateTimePicker] = useState(false);
@@ -36,6 +36,7 @@ export default function AlarmesLembretes({ navigation }: any) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dateTime, setDateTime] = useState(new Date());
+  const [isUpdating, setIsUpdating] = useState('');
 
   const handleAddReminder = useCallback(() => {
     setEditingReminder(null);
@@ -55,66 +56,32 @@ export default function AlarmesLembretes({ navigation }: any) {
 
   const handleSaveReminder = useCallback(async () => {
     try {
-      // Preparar dados para validação
-      const reminderData = {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        dateTime: dateTime instanceof Date && !isNaN(dateTime.getTime()) ? dateTime : new Date(),
-      };
-
-      // Validação completa dos dados
-      const validation = validateReminder(reminderData);
+      const validation = validateReminder({ title, description, dateTime });
       if (!validation.isValid) {
         Alert.alert('Dados Inválidos', validation.errors.join('\n'));
         return;
       }
 
-      // Verificar se a data não é no passado (apenas para novos lembretes)
-      if (!editingReminder) {
-        const now = new Date();
-        const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutos de tolerância
-        
-        // Validar se a data é válida primeiro
-        if (!(dateTime instanceof Date) || isNaN(dateTime.getTime())) {
-          Alert.alert('Data Inválida', 'Por favor, selecione uma data válida.');
-          return;
-        }
-        
-        if (dateTime < fiveMinutesFromNow) {
-          Alert.alert(
-            'Data Inválida',
-            'A data e hora do lembrete deve ser pelo menos 5 minutos no futuro para garantir que a notificação seja agendada corretamente.'
-          );
-          return;
-        }
-      }
-
-      // Sanitizar dados
       const sanitizedData = {
-        title: sanitizeString(reminderData.title),
-        description: reminderData.description ? sanitizeString(reminderData.description) : undefined,
-        dateTime: reminderData.dateTime,
+        title: sanitizeString(title),
+        description: description ? sanitizeString(description) : '',
+        dateTime,
+        isCompleted: false
       };
-
-      let success = false;
       
       if (editingReminder) {
-        success = await updateReminder(editingReminder.id, sanitizedData);
+        await updateReminder(editingReminder.id, sanitizedData);
       } else {
-        const payload: CreateReminderData = sanitizedData;
-        success = await addReminder(payload);
+        await addReminder(sanitizedData);
       }
 
-      if (success) {
         setShowModal(false);
         setEditingReminder(null);
         setTitle('');
         setDescription('');
         setDateTime(new Date());
         Alert.alert('Sucesso', editingReminder ? 'Lembrete atualizado com sucesso!' : 'Lembrete criado com sucesso!');
-      } else {
-        Alert.alert('Erro ao Salvar', 'Não foi possível salvar o lembrete. Verifique sua conexão e tente novamente.');
-      }
+      
     } catch (error) {
       const appError = handleJSError(error as Error, 'Salvar Lembrete - Formulário');
       Alert.alert('Erro Inesperado', 'Ocorreu um erro ao salvar o lembrete. Tente novamente.');
@@ -124,12 +91,8 @@ export default function AlarmesLembretes({ navigation }: any) {
 
   const handleDeleteReminder = useCallback(async (id: string) => {
     try {
-      const success = await deleteReminder(id);
-      if (success) {
+      await deleteReminder(id);
         Alert.alert('Sucesso', 'Lembrete excluído com sucesso!');
-      } else {
-        Alert.alert('Erro ao Excluir', 'Não foi possível excluir o lembrete. Verifique sua conexão e tente novamente.');
-      }
     } catch (error) {
       const appError = handleJSError(error as Error, 'Excluir Lembrete');
       Alert.alert('Erro Inesperado', 'Ocorreu um erro ao excluir o lembrete. Tente novamente.');
@@ -140,33 +103,29 @@ export default function AlarmesLembretes({ navigation }: any) {
   // Melhorar a função handleToggleReminder para fornecer feedback ao usuário
   const handleToggleReminder = useCallback(async (id: string) => {
     try {
-      const reminderToToggle = reminders.find(r => r.id === id);
-      if (!reminderToToggle) {
-        Alert.alert('Erro', 'Lembrete não encontrado');
-        return;
-      }
+      setIsUpdating(id);
       
-      const newStatus = !reminderToToggle.isCompleted;
-      const actionText = newStatus ? 'concluído' : 'pendente';
+      // Buscar o lembrete atual para exibir nome na mensagem
+      const currentReminder = reminders.find(r => r.id === id);
+      const reminderName = currentReminder?.title || 'Lembrete';
       
-      // Não precisamos definir isLoading manualmente, pois ele é gerenciado pelo contexto
-      // e será atualizado automaticamente quando toggleReminder for chamado
+      // O estado será atualizado automaticamente através do context
+      // e será atualizado automaticamente quando toggleComplete for chamado
       
-      const success = await toggleReminder(id);
+      await toggleComplete(id);
       
-      if (success) {
-        // Feedback visual de sucesso
-        showToast(`Lembrete marcado como ${actionText}`, 'success', 2000);
-      } else {
-        Alert.alert('Erro ao Atualizar', `Não foi possível marcar o lembrete como ${actionText}. Tente novamente.`);
-      }
+      // Feedback de sucesso
+      const newStatus = currentReminder?.isCompleted ? 'reaberto' : 'concluído';
+      showToast(`${reminderName} ${newStatus} com sucesso!`, 'success');
+      
     } catch (error) {
-      const appError = handleJSError(error as Error, 'Toggle Lembrete - Interface');
-      Alert.alert('Erro Inesperado', 'Ocorreu um erro ao atualizar o lembrete. Tente novamente.');
+      const appError = handleJSError(error as Error, 'handleToggleReminder');
       console.error('Erro no handleToggleReminder:', appError);
+      showToast('Erro ao atualizar status do lembrete', 'error');
+    } finally {
+      setIsUpdating('');
     }
-    // Removemos o bloco finally com setIsLoading(false) pois não precisamos gerenciar isso manualmente
-  }, [toggleReminder, reminders, showToast]);
+  }, [toggleComplete, reminders, showToast]);
 
   const getRemindersByStatus = () => {
     const now = new Date();
@@ -256,23 +215,31 @@ export default function AlarmesLembretes({ navigation }: any) {
           style={styles.modalOverlay}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <View style={[styles.modalContent, { backgroundColor: '#373B44' }]}>
-            <Text style={[styles.modalTitle, { color: '#fff' }]}>
+          <View style={[styles.modalContent, { backgroundColor: theme.background.card }]}>
+            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>
               {editingReminder ? 'Editar Lembrete' : 'Novo Lembrete'}
             </Text>
 
             <TextInput
-              style={[styles.input, { backgroundColor: '#4A4F59', color: '#fff', borderColor: '#5A606B' }]}
+              style={[styles.input, { 
+                backgroundColor: theme.input.background, 
+                color: theme.text.primary, 
+                borderColor: theme.input.border 
+              }]}
               placeholder="Título do lembrete"
-              placeholderTextColor="#888"
+              placeholderTextColor={theme.text.placeholder}
               value={title}
               onChangeText={setTitle}
             />
 
             <TextInput
-              style={[styles.input, styles.textArea, { backgroundColor: '#4A4F59', color: '#fff', borderColor: '#5A606B' }]}
+              style={[styles.input, styles.textArea, { 
+                backgroundColor: theme.input.background, 
+                color: theme.text.primary, 
+                borderColor: theme.input.border 
+              }]}
               placeholder="Descrição (opcional)"
-              placeholderTextColor="#888"
+              placeholderTextColor={theme.text.placeholder}
               value={description}
               onChangeText={setDescription}
               multiline
@@ -281,12 +248,15 @@ export default function AlarmesLembretes({ navigation }: any) {
 
             {/* Botão para abrir seletor de data/hora */}
             <TouchableOpacity 
-              style={[styles.dateTimeButton, { backgroundColor: '#4A4F59', borderColor: '#5A606B' }]}
+              style={[styles.dateTimeButton, { 
+                backgroundColor: theme.input.background, 
+                borderColor: theme.input.border 
+              }]}
               onPress={() => setShowDateTimePicker(true)}
             >
               <View style={styles.dateTimeButtonContent}>
-                <Text style={[styles.dateTimeButtonLabel, { color: '#888' }]}>Data e Hora</Text>
-                <Text style={[styles.dateTimeButtonValue, { color: '#fff' }]}>
+                <Text style={[styles.dateTimeButtonLabel, { color: theme.text.placeholder }]}>Data e Hora</Text>
+                <Text style={[styles.dateTimeButtonValue, { color: theme.text.primary }]}>
                   {dateTime && dateTime instanceof Date && !isNaN(dateTime.getTime()) 
                     ? `${formatDate(dateTime)} às ${formatTime(dateTime)}`
                     : 'Selecione uma data'
@@ -298,10 +268,10 @@ export default function AlarmesLembretes({ navigation }: any) {
 
             <View style={styles.modalActions}>
               <TouchableOpacity 
-                style={[styles.cancelButton, { backgroundColor: '#5A606B' }]} 
+                style={[styles.cancelButton, { backgroundColor: theme.background.primary }]} 
                 onPress={() => setShowModal(false)}
               >
-                <Text style={[styles.cancelButtonText, { color: '#fff' }]}>Cancelar</Text>
+                <Text style={[styles.cancelButtonText, { color: theme.text.primary }]}>Cancelar</Text>
               </TouchableOpacity>
               <Button
                 title="Salvar"
@@ -331,7 +301,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 80,
     alignItems: 'center',
   },
   addButtonContainer: {

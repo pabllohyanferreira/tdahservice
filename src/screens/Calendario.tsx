@@ -38,7 +38,7 @@ export default function Calendario({ navigation }: any) {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
-
+    
   // Função para criar data sem problemas de timezone
   const createDate = (year: number, month: number, day: number) => {
     return new Date(year, month - 1, day, 12, 0, 0, 0); // Meio-dia para evitar problemas de timezone
@@ -48,7 +48,7 @@ export default function Calendario({ navigation }: any) {
   const hasReminders = (date: Date) => {
     return reminders.some(reminder => {
       if (!reminder.dateTime || !(reminder.dateTime instanceof Date)) return false;
-      
+
       // Normalizar as datas para comparar apenas dia/mês/ano
       const reminderDate = new Date(reminder.dateTime);
       const compareDate = new Date(date);
@@ -70,11 +70,11 @@ export default function Calendario({ navigation }: any) {
       const reminderDate = new Date(reminder.dateTime);
       const compareDate = new Date(date);
       
-      return (
+    return (
         reminderDate.getDate() === compareDate.getDate() &&
         reminderDate.getMonth() === compareDate.getMonth() &&
         reminderDate.getFullYear() === compareDate.getFullYear()
-      );
+    );
     });
   };
 
@@ -129,16 +129,16 @@ export default function Calendario({ navigation }: any) {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text.primary }]}>Calendário</Text>
-          <TouchableOpacity 
-            style={[styles.addButton, { backgroundColor: theme.action.primary }]}
-            onPress={() => navigation.navigate('AlarmesLembretes')}
-          >
-            <Ionicons name="add" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.text.primary }]}>Calendário</Text>
+        <TouchableOpacity 
+          style={[styles.addButton, { backgroundColor: theme.action.primary }]}
+          onPress={() => navigation.navigate('AlarmesLembretes')}
+        >
+          <Ionicons name="add" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
         {/* Calendário Oficial */}
         <View style={styles.calendarContainer}>
@@ -184,10 +184,10 @@ export default function Calendario({ navigation }: any) {
             onPressArrowLeft={(subtractMonth) => subtractMonth()}
             onPressArrowRight={(addMonth) => addMonth()}
           />
-        </View>
+      </View>
 
         {/* Abas Stack */}
-        <View style={styles.tabsContainer}>
+        <View style={[styles.tabsContainer, { backgroundColor: theme.background.card }]}>
           <TouchableOpacity
             style={[
               styles.tabButton,
@@ -205,7 +205,7 @@ export default function Calendario({ navigation }: any) {
               { color: activeTab === 'reminders' ? '#fff' : theme.text.secondary }
             ]}>
               Lembretes
-            </Text>
+          </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -227,14 +227,14 @@ export default function Calendario({ navigation }: any) {
               Notas
             </Text>
           </TouchableOpacity>
-        </View>
+      </View>
 
         {/* Conteúdo das Abas */}
         {activeTab === 'reminders' && (
           <View style={styles.tabContent}>
-            <Text style={[styles.selectedDateTitle, { color: theme.text.primary }]}>
-              {selectedDate.toLocaleDateString('pt-BR', { 
-                weekday: 'long',
+        <Text style={[styles.selectedDateTitle, { color: theme.text.primary }]}>
+          {selectedDate.toLocaleDateString('pt-BR', { 
+            weekday: 'long',
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric'
@@ -287,9 +287,9 @@ export default function Calendario({ navigation }: any) {
                       {reminder.dateTime?.toLocaleTimeString('pt-BR', { 
                         hour: '2-digit', 
                         minute: '2-digit' 
-                      })}
-                    </Text>
-                  </View>
+          })}
+        </Text>
+      </View>
                 ))}
               </View>
             );
@@ -316,7 +316,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 80,
+    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
@@ -489,7 +490,6 @@ const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: 'row',
     marginBottom: 20,
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 4,
     elevation: 2,

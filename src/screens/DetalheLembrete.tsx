@@ -10,10 +10,10 @@ import { useReminders } from '../contexts/ReminderContext';
 export default function DetalheLembrete({ route }: { route: RouteProp<any, any> }) {
   const { reminder } = route.params as { reminder: any };
   const { theme, themeType } = useTheme();
-  const { toggleReminder, deleteReminder } = useReminders();
+  const { toggleComplete, deleteReminder } = useReminders();
 
-  const handleToggleStatus = async () => {
-    await toggleReminder(reminder.id);
+  const handleToggleComplete = async () => {
+    await toggleComplete(reminder.id);
   };
 
   const handleDelete = () => {
@@ -87,7 +87,7 @@ export default function DetalheLembrete({ route }: { route: RouteProp<any, any> 
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
             style={[styles.actionButton, { backgroundColor: getStatusColor() }]}
-            onPress={handleToggleStatus}
+            onPress={handleToggleComplete}
           >
             <Ionicons 
               name={reminder.isCompleted ? "refresh" : "checkmark"} 

@@ -20,7 +20,7 @@ const dailyRotateFileTransportError = new DailyRotateFile({
 });
 
 const logger = createLogger({
-  level: 'info',
+  level: 'error',
   format: format.combine(
     format.timestamp(),
     format.errors({ stack: true }),

@@ -5,7 +5,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const NotificationManager: React.FC = () => {
-  const { isEnabled, isLoading, enableNotifications, sendTestNotification } = useNotifications();
+  const { isEnabled, isLoading, enableNotifications } = useNotifications();
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -50,12 +50,6 @@ export const NotificationManager: React.FC = () => {
     <View style={[styles.container, { backgroundColor: theme.action.success }]}>
       <Ionicons name="notifications" size={24} color="#fff" />
       <Text style={styles.text}>Notificações Ativas</Text>
-      <TouchableOpacity 
-        style={styles.testButton}
-        onPress={sendTestNotification}
-      >
-        <Ionicons name="play" size={16} color="#fff" />
-      </TouchableOpacity>
     </View>
   );
 };
@@ -68,6 +62,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
+    width: '100%',
+    maxWidth: 400,
   },
   text: {
     color: '#fff',
@@ -76,9 +72,5 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
   },
-  testButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
+
 }); 

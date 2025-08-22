@@ -13,8 +13,6 @@ interface NotificationContextData {
   disableNotifications: () => Promise<void>;
   scheduleReminderNotification: (reminder: Reminder) => Promise<string | null>;
   cancelReminderNotification: (reminderId: string) => Promise<void>;
-  sendTestNotification: () => Promise<void>;
-  checkPermissions: () => Promise<any>;
 }
 
 const NotificationContext = createContext<NotificationContextData>({} as NotificationContextData);
@@ -120,7 +118,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const scheduleReminderNotification = useCallback(async (reminder: Reminder): Promise<string | null> => {
     if (!isEnabled) {
-      console.log('Notificações desabilitadas');
       return null;
     }
 
@@ -129,12 +126,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       // Verificar se a data não é no passado
       if (trigger <= new Date()) {
-        console.log('Data do lembrete já passou');
         return null;
       }
 
-      // Para desenvolvimento, usar notificação imediata
-      // Em produção, isso seria agendado para a data correta
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: '⏰ Lembrete: ' + reminder.title,
@@ -146,13 +140,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           },
           sound: true,
         },
-        trigger: null, // Imediato para desenvolvimento
+        trigger: null,
       });
 
-      console.log('Notificação agendada:', notificationId);
       return notificationId;
     } catch (error) {
-      console.error('Erro ao agendar notificação:', error);
       return null;
     }
   }, [isEnabled]);
@@ -164,47 +156,14 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       for (const notification of scheduledNotifications) {
         if (notification.content.data?.reminderId === reminderId) {
           await Notifications.cancelScheduledNotificationAsync(notification.identifier);
-          console.log('Notificação do lembrete cancelada:', notification.identifier);
         }
       }
     } catch (error) {
-      console.error('Erro ao cancelar notificações do lembrete:', error);
+      // Silenciar erro em produção
     }
   }, []);
 
-  const sendTestNotification = async () => {
-    if (!isEnabled) {
-      Alert.alert('Erro', 'Ative as notificações primeiro');
-      return;
-    }
 
-    try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '🧪 Teste de Notificação',
-          body: 'Esta é uma notificação de teste do TDAH Service!',
-          data: { type: 'test' },
-          sound: true,
-        },
-        trigger: null, // Imediato
-      });
-
-      Alert.alert('Sucesso', 'Notificação de teste enviada!');
-    } catch (error) {
-      console.error('Erro ao enviar notificação de teste:', error);
-      Alert.alert('Erro', 'Não foi possível enviar a notificação de teste');
-    }
-  };
-
-  const checkPermissions = async (): Promise<any> => {
-    try {
-      const { status } = await Notifications.getPermissionsAsync();
-      return status;
-    } catch (error) {
-      console.error('Erro ao verificar permissões:', error);
-      return 'undetermined';
-    }
-  };
 
   return (
     <NotificationContext.Provider value={{
@@ -215,8 +174,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       disableNotifications,
       scheduleReminderNotification,
       cancelReminderNotification,
-      sendTestNotification,
-      checkPermissions,
     }}>
       {children}
     </NotificationContext.Provider>

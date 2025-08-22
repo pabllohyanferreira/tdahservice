@@ -1,21 +1,15 @@
 // Utilitário de logging para produção
 export const logger = {
   info: (message: string, data?: any) => {
-    if (__DEV__) {
-      console.log(message, data);
-    }
+    // Log silencioso em produção
   },
   error: (message: string, error?: any) => {
-    console.error(message, error);
+    // Log silencioso em produção
   },
   warn: (message: string, data?: any) => {
-    if (__DEV__) {
-      console.warn(message, data);
-    }
+    // Log silencioso em produção
   },
   debug: (message: string, data?: any) => {
-    if (__DEV__) {
-      console.log(`🔍 DEBUG: ${message}`, data);
-    }
+    // Log silencioso em produção
   }
 }; 
