@@ -1,156 +1,157 @@
-# 📱 TDAH Service
+# TDAH Service
 
-Um aplicativo completo de lembretes e organização para pessoas com TDAH, desenvolvido em React Native com Expo.
+Aplicativo mobile para apoio a pessoas com TDAH, com foco em organizacao pessoal, lembretes, notificacoes e acompanhamento de rotina.  
+O projeto esta dividido em **frontend (React Native + Expo)** e **backend (Node.js + Express + MongoDB)**.
 
-## 🚀 Características Principais
+## 1) Objetivo do projeto
 
-- ✅ **Autenticação Completa** - Login local e Google OAuth
-- ✅ **Sistema de Lembretes** - CRUD completo com animações
-- ✅ **Notificações Push** - Agendamento automático
-- ✅ **Temas Dinâmicos** - Escuro, Claro e Roxo
-- ✅ **Backend Robusto** - API REST com MongoDB
-- ✅ **Interface Moderna** - UI/UX otimizada para TDAH
+Desenvolver uma solucao pratica para:
+- registrar lembretes e compromissos;
+- enviar notificacoes no horario correto;
+- oferecer interface simples e acessivel;
+- manter dados do usuario com autenticacao e persistencia.
 
-## 📚 Documentação
+## 2) Arquitetura geral
 
-Toda a documentação está organizada na pasta `docs/`:
+- **Frontend mobile**: app em React Native com Expo.
+- **Backend API REST**: servidor em Express com TypeScript.
+- **Banco de dados**: MongoDB (via Mongoose).
+- **Autenticacao**: JWT (login local e Google).
 
-### 📁 **Estrutura da Documentação**
-```
-docs/
-├── README.md                    # Índice principal
-├── deploy/                      # Guias de deploy
-├── bugs/                        # Bugs e correções
-├── temas/                       # Sistema de temas
-├── funcionalidades/             # Funcionalidades do app
-├── testes/                      # Testes e relatórios
-└── analise/                     # Análise do código
-```
+Fluxo resumido:
+1. Usuario faz cadastro/login no app.
+2. App recebe token JWT.
+3. Requisicoes protegidas enviam token para API.
+4. API valida token e executa CRUD de lembretes.
 
-### 🎯 **Guias Rápidos**
+## 3) Tecnologias e linguagens utilizadas
 
-- **[📖 Documentação Completa](./docs/README.md)** - Índice de toda a documentação
-- **[🚀 Deploy Rápido](./docs/deploy/README_DEPLOY.md)** - Como fazer deploy
-- **[🐛 Correções](./docs/bugs/CORREÇÕES_IMPLEMENTADAS.md)** - Bugs corrigidos
-- **[🎨 Temas](./docs/temas/TEMA_ROXO_FINAL.md)** - Sistema de temas
-
-## 🛠️ Tecnologias
+### Linguagens
+- TypeScript
+- JavaScript
+- JSON
 
 ### Frontend
-- **React Native** + **Expo**
-- **TypeScript**
-- **React Navigation**
-- **React Context API**
-- **Expo Notifications**
+- React Native
+- Expo
+- React Navigation
+- AsyncStorage
+- Expo Notifications
+- Expo AV
+- React Native Calendars
 
 ### Backend
-- **Node.js** + **Express**
-- **MongoDB** + **Mongoose**
-- **JWT Authentication**
-- **Google OAuth**
+- Node.js
+- Express
+- Mongoose
+- JWT (`jsonwebtoken`)
+- `bcryptjs`
+- `cors`
+- `helmet`
+- `dotenv`
+- `winston`
 
-### Deploy
-- **Railway** (Backend)
-- **Expo EAS** (Frontend)
-- **MongoDB Atlas** (Database)
+## 4) Estrutura do projeto
 
-## 🚀 Começando
-
-### Pré-requisitos
-- Node.js 18+
-- Expo CLI
-- MongoDB Atlas (gratuito)
-
-### Instalação
-
-1. **Clone o repositório**
-```bash
-git clone <seu-repositorio>
-cd tdahservice
+```text
+tdahservice/
+|- App.tsx
+|- app.json
+|- package.json
+|- tsconfig.json
+|- index.js
+|- assets/
+|- src/
+|  |- components/
+|  |- contexts/
+|  |- hooks/
+|  |- screens/
+|  |- services/
+|  |- config/
+|  |- theme/
+|  |- types/
+|  \- utils/
+|- backend/
+|  |- package.json
+|  |- tsconfig.json
+|  |- src/
+|  |  |- app.ts
+|  |  |- controllers/
+|  |  |- middleware/
+|  |  |- models/
+|  |  |- routes/
+|  |  |- services/
+|  |  |- config/
+|  |  \- utils/
+|  \- .env
+\- README.md
 ```
 
-2. **Instale as dependências**
-```bash
-npm install
-cd backend && npm install
-```
+## 5) Modulos principais
 
-3. **Configure as variáveis de ambiente**
-```bash
-# Backend
-cp backend/env.example backend/.env
-# Edite backend/.env com suas configurações
-```
+### Frontend
+- **Telas**: Dashboard, Alarmes/Lembretes, Calendario, Configuracoes, Notas, Onboarding.
+- **Contextos globais**: tema, usuario, notificacoes, lembretes e toast.
+- **Servicos**: notificacoes, vibracao, alarmes, backup e autenticacao offline.
 
-4. **Execute o projeto**
-```bash
-# Backend
-cd backend && npm run dev
+### Backend
+- **Autenticacao**: cadastro, login, login Google, recuperar senha, redefinir senha.
+- **Lembretes**: CRUD com validacao e protecao por token.
+- **Backup anonimo**: criacao, leitura, atualizacao e remocao por `device-id`.
+- **Administracao**: rotas administrativas para usuarios/backups.
 
-# Frontend (em outro terminal)
-npm start
-```
+## 6) Endpoints principais da API
 
-## 📱 Funcionalidades
+Base URL local: `http://localhost:3000`
 
-### 🔐 Autenticação
-- Registro e login local
-- Login com Google
-- Recuperação de senha
-- Tokens JWT seguros
+- `GET /api/health` - status da API
+- `POST /api/auth/register` - cadastro
+- `POST /api/auth/login` - login
+- `POST /api/auth/google` - login Google
+- `POST /api/auth/forgot-password` - solicitar reset
+- `POST /api/auth/reset-password` - redefinir senha
+- `GET /api/reminders` - listar lembretes (protegido)
+- `POST /api/reminders` - criar lembrete (protegido)
+- `PUT /api/reminders/:id` - atualizar lembrete (protegido)
+- `DELETE /api/reminders/:id` - remover lembrete (protegido)
+- `POST /api/backup/anonymous` - criar backup anonimo
 
-### 📋 Lembretes
-- Criar, editar, deletar lembretes
-- Animações suaves
-- Prioridades visuais
-- Filtros e busca
+## 7) Como executar o projeto
 
-### 🔔 Notificações
-- Push notifications
-- Agendamento automático
-- Permissões configuráveis
-- Teste de notificações
+### Pre-requisitos
+- Node.js 18 ou superior
+- npm
+- MongoDB (local ou Atlas)
+- Expo Go (celular) ou emulador Android/iOS
 
-### 🎨 Temas
-- Tema escuro
-- Tema claro
-- Tema roxo (principal)
-- Transições suaves
+### Passo a passo
+1. Instalar dependencias do frontend:
+   - `npm install`
+2. Instalar dependencias do backend:
+   - `cd backend`
+   - `npm install`
+3. Configurar variaveis de ambiente em `backend/.env` (ex.: `MONGODB_URI`, `JWT_SECRET`).
+4. Iniciar backend:
+   - `npm run dev`
+5. Em outro terminal, iniciar frontend (na raiz):
+   - `npm start`
 
-## 🧪 Testes
+## 8) Requisitos funcionais atendidos
 
-```bash
-# Testes de validação
-npm test -- --testPathPattern=validation.test.ts
-```
+- Cadastro e autenticacao de usuarios.
+- Gerenciamento de lembretes (criar, editar, concluir e excluir).
+- Notificacoes e alarmes para tarefas.
+- Organizacao por telas focadas em rotina e produtividade.
+- Persistencia de dados e sincronizacao com API.
 
-## 📊 Status do Projeto
+## 9) Limpeza aplicada para apresentacao
 
-- ✅ **Frontend:** Completo e testado
-- ✅ **Backend:** API REST completa
-- ✅ **Database:** MongoDB configurado
-- ✅ **Deploy:** Configurado para produção
-- ✅ **Documentação:** 100% documentado
-- ✅ **Bugs:** Corrigidos e testados
+Durante a organizacao para entrega academica, foram removidos artefatos de apoio que nao sao necessarios para rodar o app, como:
+- arquivos antigos de documentacao auxiliar;
+- scripts de automacao de build/deploy em shell/powershell;
+- arquivos de pipeline e configuracoes externas de deploy;
+- arquivos de teste automatizado que nao impactam a execucao.
 
-## 🤝 Contribuindo
+## 10) Autor e contexto
 
-1. Fork o projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Push para a branch
-5. Abra um Pull Request
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
-
-## 📞 Suporte
-
-- **Documentação:** [docs/README.md](./docs/README.md)
-- **Issues:** pabllohyanferreira Issues
-- **Email:** pablohyan64@gmail.com
-
----
-
-**Desenvolvido com ❤️ para a comunidade TDAH** 
+Projeto academico para apresentacao em faculdade, com foco em desenvolvimento mobile full stack e boas praticas de arquitetura em camadas.
