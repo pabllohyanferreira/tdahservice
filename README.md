@@ -29,27 +29,16 @@ Fluxo resumido:
 ### Linguagens
 - TypeScript
 - JavaScript
-- JSON
 
 ### Frontend
 - React Native
 - Expo
 - React Navigation
-- AsyncStorage
-- Expo Notifications
-- Expo AV
-- React Native Calendars
 
 ### Backend
 - Node.js
 - Express
 - Mongoose
-- JWT (`jsonwebtoken`)
-- `bcryptjs`
-- `cors`
-- `helmet`
-- `dotenv`
-- `winston`
 
 ## 4) Estrutura do projeto
 
